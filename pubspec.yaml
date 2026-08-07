@@ -1,15 +1,23 @@
-name: va_store
-description: VA Store - Tu Hi Boss, SELL & SELLER Control
-publish_to: 'none'
-version: 1.0.0+1
-environment:
-  sdk: '>=3.0.0 <4.0.0'
-dependencies:
-  flutter:
-    sdk: flutter
-  firebase_core: ^2.24.0
-  cloud_firestore: ^4.15.0
-  url_launcher: ^6.2.0
-  cupertino_icons: ^1.0.2
-flutter:
-  uses-material-design: true
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+      - run: mv lib lib_backup
+      - run: flutter create. --platforms=android --project-name va_store
+      - run: rm -rf lib && mv lib_backup lib
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: build/app/outputs/flutter-apk/app-release.apk
