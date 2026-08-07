@@ -13,7 +13,7 @@ jobs:
         with:
           flutter-version: '3.22.0'
       - run: mv lib lib_backup
-      - run: flutter create. --platforms=android --project-name va_store
+      - run: flutter create . --platforms=android --project-name va_store
       - run: rm -rf lib && mv lib_backup lib
       - run: flutter pub get
       - run: flutter build apk --release
