@@ -1,5 +1,5 @@
 name: Build APK
-on: [push, workflow_dispatch]
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,10 +12,14 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
-      
+      - run: |
+          mv lib lib_backup
+          flutter create. --platforms=android --project-name va_store
+          rm -rf lib
+          mv lib_backup lib
       - run: flutter pub get
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: va-store-apk
+          name: apk
           path: build/app/outputs/flutter-apk/app-release.apk
