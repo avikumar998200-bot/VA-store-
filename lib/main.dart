@@ -1,135 +1,35 @@
 import 'package:flutter/material.dart';
+void main()=>runApp(AviraStore());
+const String ADMIN_NUMBER = "8955116739"; // SIRF TU
 
-void main() => runApp(VAStoreApp());
-
-List<Map<String, dynamic>> allProducts = [
-  {'name': 'T-Shirt', 'price': 399, 'seller': 'Vikky', 'icon': Icons.checkroom},
-  {'name': 'Shoes', 'price': 999, 'seller': 'Avi', 'icon': Icons.directions_run},
-  {'name': 'Watch', 'price': 1499, 'seller': 'Vikky', 'icon': Icons.watch},
-  {'name': 'Headphone', 'price': 799, 'seller': 'Avi', 'icon': Icons.headphones},
+class AviraStore extends StatelessWidget{
+@override Widget build(BuildContext c)=>MaterialApp(title:'Avira Store',debugShowCheckedModeBanner:false,theme:ThemeData(colorScheme:ColorScheme.fromSeed(seedColor:Color(0xFF9F2089))),home:MainPage());
+}
+class Product{String id,name,shop,category; double price; bool approved; Product({required this.id,required this.name,required this.shop,required this.category,required this.price,this.approved=true});}
+List<Product> products=[
+Product(id:'1',name:'Georgette Saree',shop:'Avira Fashion',category:'Saree',price:349),
+Product(id:'2',name:'Kurti Set',shop:'Style Hub',category:'Kurti',price:499),
 ];
+List<Product> cart=[];
+List<Map> sellers=[{'name':'Avira Fashion','number':'8955116739','approved':true}];
+String adminInput="";
 
-List<Map<String, dynamic>> cart = [];
-List<Map<String, dynamic>> orders = [];
+class MainPage extends StatefulWidget{ @override _MainPageState createState()=>_MainPageState(); }
+class _MainPageState extends State<MainPage>{int idx=0;@override Widget build(BuildContext c){
+List pages=[HomePage(onCart:()=>setState((){})),SellerPage(),CartPage(onUpdate:()=>setState((){})),ProfilePage()];
+return Scaffold(body:pages[idx],bottomNavigationBar:NavigationBar(selectedIndex:idx,onDestinationSelected:(i)=>setState(()=>idx=i),destinations:[NavigationDestination(icon:Icon(Icons.home),label:'Home'),NavigationDestination(icon:Icon(Icons.store),label:'Become Seller'),NavigationDestination(icon:Badge(label:Text('${cart.length}'),child:Icon(Icons.shopping_cart)),label:'Cart'),NavigationDestination(icon:Icon(Icons.person),label:'You')]));
+}}
 
-class VAStoreApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: LoginPage());
-  }
-}
+class HomePage extends StatelessWidget{final VoidCallback onCart; HomePage({required this.onCart});
+@override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('Avira Store',style:TextStyle(color:Color(0xFF9F2089),fontWeight:FontWeight.bold))),body:Column(children:[Padding(padding:EdgeInsets.all(10),child:TextField(decoration:InputDecoration(hintText:'Search Saree, Kurti...',prefixIcon:Icon(Icons.search),border:OutlineInputBorder(borderRadius:BorderRadius.circular(10))))),Expanded(child:GridView.builder(padding:EdgeInsets.all(8),gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,childAspectRatio:0.62,crossAxisSpacing:8,mainAxisSpacing:8),itemCount:products.where((p)=>p.approved).length,itemBuilder:(ctx,i){var p=products.where((p)=>p.approved).toList()[i];return Card(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Expanded(child:Container(color:Colors.grey[200],child:Center(child:Icon(Icons.image,size:40)))),Padding(padding:EdgeInsets.all(6),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(p.shop,style:TextStyle(fontSize:10,color:Color(0xFF9F2089))),Text(p.name,maxLines:2,style:TextStyle(fontSize:13)),Text('₹${p.price.toInt()}',style:TextStyle(fontWeight:FontWeight.bold)),Container(color:Colors.green[50],padding:EdgeInsets.all(2),child:Text('Free Delivery',style:TextStyle(fontSize:10,color:Colors.green)))]))]))}))]));}}
 
-// LOGIN PAGE - SAB ROLE
-class LoginPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
-      body: Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.store, size: 100, color: Colors.deepPurple),
-          SizedBox(height: 10),
-          Text('VA STORE', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-          Text('Admin | Seller | Customer', style: TextStyle(color: Colors.grey)),
-          SizedBox(height: 40),
-          roleButton(context, 'ADMIN PANEL', Icons.admin_panel_settings, Colors.red, AdminHome()),
-          roleButton(context, 'SELLER PANEL', Icons.storefront, Colors.orange, SellerHome()),
-          roleButton(context, 'CUSTOMER SHOPPING', Icons.shopping_bag, Colors.deepPurple, CustomerHome()),
-        ]),
-      ),
-    );
-  }
-  Widget roleButton(BuildContext ctx, String title, IconData icon, Color color, Widget page) {
-    return Container(margin: EdgeInsets.symmetric(vertical: 8, horizontal: 30), width: double.infinity, child: ElevatedButton.icon(icon: Icon(icon, color: Colors.white), label: Text(title, style: TextStyle(color: Colors.white)), style: ElevatedButton.styleFrom(backgroundColor: color, padding: EdgeInsets.all(15)), onPressed: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => page))));
-  }
-}
+class SellerPage extends StatefulWidget{ @override _SellerPageState createState()=>_SellerPageState();}
+class _SellerPageState extends State<SellerPage>{bool isSeller=false; String shopName='', sNumber='', pName='', pPrice='', cat='Saree';
+@override Widget build(BuildContext c){
+if(!isSeller){return Scaffold(appBar:AppBar(title:Text('Become a Seller on Avira')),body:Padding(padding:EdgeInsets.all(20),child:Column(children:[Icon(Icons.store,size:80,color:Color(0xFF9F2089)),Text('Avira Pe Becho, Paisa Kamao',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),SizedBox(height:20),TextField(decoration:InputDecoration(labelText:'Shop Name'),onChanged:(v)=>shopName=v),TextField(decoration:InputDecoration(labelText:'Mobile Number'),keyboardType:TextInputType.number,onChanged:(v)=>sNumber=v),SizedBox(height:20),SizedBox(width:double.infinity,child:ElevatedButton(style:ElevatedButton.styleFrom(backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white),onPressed:(){if(shopName.isNotEmpty){sellers.add({'name':shopName,'number':sNumber,'approved':false}); setState(()=>isSeller=true); ScaffoldMessenger.of(c).showSnackBar(SnackBar(content:Text('Request Sent to Admin 8955116739')));}},child:Text('Register as Seller'))),Text('Admin (8955116739) approve karega tab bech paoge')] )));}
+return Scaffold(appBar:AppBar(title:Text('Seller Panel - $shopName')),body:Padding(padding:EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Card(color:Colors.orange[50],child:ListTile(title:Text('Status: Pending Admin Approval'),subtitle:Text('Admin: 8955116739 se approve karwaye'))),Divider(),Text('Product Add Karo',style:TextStyle(fontWeight:FontWeight.bold)),TextField(decoration:InputDecoration(labelText:'Product Name'),onChanged:(v)=>pName=v),TextField(decoration:InputDecoration(labelText:'Price'),keyboardType:TextInputType.number,onChanged:(v)=>pPrice=v),DropdownButton(value:cat,items:['Saree','Kurti','Kids','Mens'].map((e)=>DropdownMenuItem(value:e,child:Text(e))).toList(),onChanged:(v)=>setState(()=>cat=v.toString())),ElevatedButton(onPressed:(){if(pName.isNotEmpty){setState(()=>products.add(Product(id:DateTime.now().toString(),name:pName,shop:shopName,category:cat,price:double.tryParse(pPrice)??0,approved:false))); ScaffoldMessenger.of(c).showSnackBar(SnackBar(content:Text('Product sent for Admin approval!')));}},child:Text('Add Product for Approval')),Expanded(child:ListView(children:products.where((p)=>p.shop==shopName).map((p)=>ListTile(title:Text(p.name),subtitle:Text(p.approved?'Approved ✅':'Pending ⏳'),trailing:IconButton(icon:Icon(Icons.delete),onPressed:()=>setState(()=>products.remove(p))))).toList()))] )));}}
 
-// CUSTOMER HOME
-class CustomerHome extends StatefulWidget { @override _CustomerHomeState createState() => _CustomerHomeState(); }
-class _CustomerHomeState extends State<CustomerHome> {
-  @override Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('VA Store - Shopping'), backgroundColor: Colors.deepPurple, actions: [
-        Stack(children: [
-          IconButton(icon: Icon(Icons.shopping_cart), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CartPage(onUpdate: () => setState(() {}))))),
-          if (cart.isNotEmpty) Positioned(right: 5, top: 5, child: CircleAvatar(radius: 10, backgroundColor: Colors.red, child: Text('${cart.length}', style: TextStyle(fontSize: 12, color: Colors.white)))),
-        ])
-      ]),
-      body: GridView.builder(padding: EdgeInsets.all(10), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.75), itemCount: allProducts.length, itemBuilder: (ctx, i) => Card(elevation: 4, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(allProducts[i]['icon'], size: 60, color: Colors.deepPurple),
-        Text(allProducts[i]['name'], style: TextStyle(fontWeight: FontWeight.bold)),
-        Text('₹${allProducts[i]['price']}', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-        Text('Seller: ${allProducts[i]['seller']}', style: TextStyle(fontSize: 10, color: Colors.grey)),
-        SizedBox(height: 8),
-        ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple), onPressed: () { setState(() => cart.add(allProducts[i])); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${allProducts[i]['name']} Added!'))); }, child: Text('Add to Cart', style: TextStyle(color: Colors.white, fontSize: 12)))
-      ]))),
-    );
-  }
-}
-
-class CartPage extends StatelessWidget {
-  final VoidCallback onUpdate;
-  CartPage({required this.onUpdate});
-  @override Widget build(BuildContext context) {
-    int total = cart.fold(0, (s, e) => s + e['price'] as int);
-    return Scaffold(
-      appBar: AppBar(title: Text('My Cart'), backgroundColor: Colors.deepPurple),
-      body: cart.isEmpty? Center(child: Text('Cart Khali Hai')) : Column(children: [
-        Expanded(child: ListView.builder(itemCount: cart.length, itemBuilder: (_, i) => ListTile(leading: Icon(cart[i]['icon']), title: Text(cart[i]['name']), trailing: Text('₹${cart[i]['price']}')))),
-        Container(padding: EdgeInsets.all(20), color: Colors.grey.shade200, child: Column(children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Total: ₹$total', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))]),
-          SizedBox(height: 10),
-          SizedBox(width: double.infinity, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.green), onPressed: () { orders.add({'items': List.from(cart), 'total': total, 'date': DateTime.now().toString()}); cart.clear(); onUpdate(); Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SuccessPage())); }, child: Text('BUY NOW - ₹$total', style: TextStyle(color: Colors.white))))
-        ]))
-      ]),
-    );
-  }
-}
-
-class SuccessPage extends StatelessWidget { @override Widget build(BuildContext context) => Scaffold(body: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.check_circle, size: 100, color: Colors.green), Text('Order Success!', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)), ElevatedButton(onPressed: () => Navigator.popUntil(context, (r) => r.isFirst), child: Text('Home Jao'))]))); }
-
-// SELLER PANEL
-class SellerHome extends StatefulWidget { @override _SellerHomeState createState() => _SellerHomeState(); }
-class _SellerHomeState extends State<SellerHome> {
-  TextEditingController nameC = TextEditingController(); TextEditingController priceC = TextEditingController();
-  @override Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Seller Panel'), backgroundColor: Colors.orange),
-      body: Padding(padding: EdgeInsets.all(15), child: Column(children: [
-        Text('Add New Product', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        TextField(controller: nameC, decoration: InputDecoration(labelText: 'Product Name (ex: Jeans)')),
-        TextField(controller: priceC, decoration: InputDecoration(labelText: 'Price (ex: 599)'), keyboardType: TextInputType.number),
-        SizedBox(height: 10),
-        ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.orange), onPressed: () { if (nameC.text.isNotEmpty && priceC.text.isNotEmpty) { setState(() { allProducts.add({'name': nameC.text, 'price': int.tryParse(priceC.text)?? 0, 'seller': 'You', 'icon': Icons.shopping_bag}); }); nameC.clear(); priceC.clear(); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Product Add Ho Gaya!'))); } }, child: Text('ADD PRODUCT', style: TextStyle(color: Colors.white))),
-        Divider(),
-        Text('My Products: ${allProducts.where((p) => p['seller'] == 'You').length}', style: TextStyle(fontWeight: FontWeight.bold)),
-        Expanded(child: ListView.builder(itemCount: allProducts.length, itemBuilder: (_, i) => ListTile(leading: Icon(allProducts[i]['icon']), title: Text(allProducts[i]['name']), subtitle: Text('₹${allProducts[i]['price']} - ${allProducts[i]['seller']}')))),
-      ])),
-    );
-  }
-}
-
-// ADMIN PANEL
-class AdminHome extends StatelessWidget {
-  @override Widget build(BuildContext context) {
-    int totalSale = orders.fold(0, (s, e) => s + e['total'] as int);
-    return Scaffold(
-      appBar: AppBar(title: Text('Admin Panel'), backgroundColor: Colors.red),
-      body: Padding(padding: EdgeInsets.all(15), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          adminCard('Total Products', '${allProducts.length}', Colors.blue),
-          adminCard('Total Orders', '${orders.length}', Colors.green),
-        ]),
-        Row(children: [
-          adminCard('Total Sale', '₹$totalSale', Colors.orange),
-          adminCard('Payment Control', 'ON', Colors.purple),
-        ]),
-        SizedBox(height: 20),
-        Text('Recent Orders:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        Expanded(child: orders.isEmpty? Center(child: Text('Abhi tak koi order nahi')) : ListView.builder(itemCount: orders.length, itemBuilder: (_, i) => Card(child: ListTile(title: Text('Order #${i+1} - ₹${orders[i]['total']}'), subtitle: Text('${orders[i]['items'].length} items - ${orders[i]['date'].substring(0, 16)}'), leading: Icon(Icons.receipt, color: Colors.red))))),
-        SizedBox(width: double.infinity, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.red), onPressed: () { orders.clear(); allProducts.clear(); allProducts.addAll([{'name': 'T-Shirt', 'price': 399, 'seller': 'Vikky', 'icon': Icons.checkroom}, {'name': 'Shoes', 'price': 999, 'seller': 'Avi', 'icon': Icons.directions_run}]); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sab Reset Ho Gaya!'))); }, child: Text('RESET STORE', style: TextStyle(color: Colors.white)))),
-      ])),
-    );
-  }
-  Widget adminCard(String title, String value, Color color) => Expanded(child: Card(color: color, child: Padding(padding: EdgeInsets.all(15), child: Column(children: [Text(title, style: TextStyle(color: Colors.white, fontSize: 12)), SizedBox(height: 5), Text(value, style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))]))));
-}
+class CartPage extends StatelessWidget{final VoidCallback onUpdate;CartPage({required this.onUpdate});@override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('Cart (${cart.length})')),body:Column(children:[Expanded(child:ListView.builder(itemCount:cart.length,itemBuilder:(_,i)=>ListTile(title:Text(cart[i].name),subtitle:Text('Seller: ${cart[i].shop}')))),ElevatedButton(onPressed:(){},child:Text('Place Order'))]));}}
+class ProfilePage extends StatelessWidget{ @override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('You')),body:ListView(children:[ListTile(title:Text('Owner: Vikky'),subtitle:Text('Admin Number: 8955116739')),ListTile(leading:Icon(Icons.admin_panel_settings),title:Text('Admin Panel'),onTap:()=>showDialog(context:c,builder:(_)=>AlertDialog(title:Text('Admin Login'),content:TextField(onChanged:(v)=>adminInput=v,decoration:InputDecoration(hintText:'Enter 8955116739')),actions:[TextButton(onPressed:(){if(adminInput==ADMIN_NUMBER) Navigator.push(c,MaterialPageRoute(builder:(_)=>AdminPanel())); else ScaffoldMessenger.of(c).showSnackBar(SnackBar(content:Text('Only 8955116739 allowed')));},child:Text('Login'))]))),ListTile(title:Text('Become Seller'),subtitle:Text('Apna shop kholo'))]));}}
+class AdminPanel extends StatefulWidget{ @override _AdminPanelState createState()=>_AdminPanelState();}
+class _AdminPanelState extends State<AdminPanel>{ @override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('ADMIN - 8955116739 Only'),backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white),body:ListView(children:[Padding(padding:EdgeInsets.all(12),child:Text('Seller Requests (${sellers.length})',style:TextStyle(fontWeight:FontWeight.bold))),...sellers.map((s)=>Card(child:ListTile(title:Text(s['name']),subtitle:Text(s['number']),trailing:s['approved']?Text('Approved ✅'):ElevatedButton(onPressed:()=>setState(()=>s['approved']=true),child:Text('Approve'))))),Divider(),Padding(padding:EdgeInsets.all(12),child:Text('Product Approvals (${products.length})',style:TextStyle(fontWeight:FontWeight.bold))),...products.map((p)=>Card(child:ListTile(title:Text(p.name),subtitle:Text('${p.shop} - ₹${p.price} - ${p.approved?"Approved":"Pending"}'),trailing:Row(mainAxisSize:MainAxisSize.min,children:[if(!p.approved) IconButton(icon:Icon(Icons.check,color:Colors.green),onPressed:()=>setState(()=>p.approved=true)),IconButton(icon:Icon(Icons.delete,color:Colors.red),onPressed:()=>setState(()=>products.remove(p)))])))).toList()]));}}
