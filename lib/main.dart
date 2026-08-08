@@ -1,35 +1,56 @@
 import 'package:flutter/material.dart';
-void main()=>runApp(AviraStore());
-const String ADMIN_NUMBER = "8955116739"; // SIRF TU
-
-class AviraStore extends StatelessWidget{
-@override Widget build(BuildContext c)=>MaterialApp(title:'Avira Store',debugShowCheckedModeBanner:false,theme:ThemeData(colorScheme:ColorScheme.fromSeed(seedColor:Color(0xFF9F2089))),home:MainPage());
+void main() { runApp(MyApp()); }
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext c) {
+    return MaterialApp(debugShowCheckedModeBanner: false, home: MainPage());
+  }
 }
-class Product{String id,name,shop,category; double price; bool approved; Product({required this.id,required this.name,required this.shop,required this.category,required this.price,this.approved=true});}
-List<Product> products=[
-Product(id:'1',name:'Georgette Saree',shop:'Avira Fashion',category:'Saree',price:349),
-Product(id:'2',name:'Kurti Set',shop:'Style Hub',category:'Kurti',price:499),
-];
-List<Product> cart=[];
-List<Map> sellers=[{'name':'Avira Fashion','number':'8955116739','approved':true}];
-String adminInput="";
+class Product { String name, shop; double price; bool ok; Product(this.name, this.shop, this.price, this.ok); }
+List<Product> allProducts = [ Product("Saree", "Avira", 349, true), Product("Kurti", "Style Hub", 499, true) ];
+List<Product> cart = [];
+String adminNumber = "8955116739";
+String inputNumber = "";
+List<Map> sellers = [];
 
-class MainPage extends StatefulWidget{ @override _MainPageState createState()=>_MainPageState(); }
-class _MainPageState extends State<MainPage>{int idx=0;@override Widget build(BuildContext c){
-List pages=[HomePage(onCart:()=>setState((){})),SellerPage(),CartPage(onUpdate:()=>setState((){})),ProfilePage()];
-return Scaffold(body:pages[idx],bottomNavigationBar:NavigationBar(selectedIndex:idx,onDestinationSelected:(i)=>setState(()=>idx=i),destinations:[NavigationDestination(icon:Icon(Icons.home),label:'Home'),NavigationDestination(icon:Icon(Icons.store),label:'Become Seller'),NavigationDestination(icon:Badge(label:Text('${cart.length}'),child:Icon(Icons.shopping_cart)),label:'Cart'),NavigationDestination(icon:Icon(Icons.person),label:'You')]));
-}}
-
-class HomePage extends StatelessWidget{final VoidCallback onCart; HomePage({required this.onCart});
-@override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('Avira Store',style:TextStyle(color:Color(0xFF9F2089),fontWeight:FontWeight.bold))),body:Column(children:[Padding(padding:EdgeInsets.all(10),child:TextField(decoration:InputDecoration(hintText:'Search Saree, Kurti...',prefixIcon:Icon(Icons.search),border:OutlineInputBorder(borderRadius:BorderRadius.circular(10))))),Expanded(child:GridView.builder(padding:EdgeInsets.all(8),gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,childAspectRatio:0.62,crossAxisSpacing:8,mainAxisSpacing:8),itemCount:products.where((p)=>p.approved).length,itemBuilder:(ctx,i){var p=products.where((p)=>p.approved).toList()[i];return Card(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Expanded(child:Container(color:Colors.grey[200],child:Center(child:Icon(Icons.image,size:40)))),Padding(padding:EdgeInsets.all(6),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(p.shop,style:TextStyle(fontSize:10,color:Color(0xFF9F2089))),Text(p.name,maxLines:2,style:TextStyle(fontSize:13)),Text('₹${p.price.toInt()}',style:TextStyle(fontWeight:FontWeight.bold)),Container(color:Colors.green[50],padding:EdgeInsets.all(2),child:Text('Free Delivery',style:TextStyle(fontSize:10,color:Colors.green)))]))]))}))]));}}
-
-class SellerPage extends StatefulWidget{ @override _SellerPageState createState()=>_SellerPageState();}
-class _SellerPageState extends State<SellerPage>{bool isSeller=false; String shopName='', sNumber='', pName='', pPrice='', cat='Saree';
-@override Widget build(BuildContext c){
-if(!isSeller){return Scaffold(appBar:AppBar(title:Text('Become a Seller on Avira')),body:Padding(padding:EdgeInsets.all(20),child:Column(children:[Icon(Icons.store,size:80,color:Color(0xFF9F2089)),Text('Avira Pe Becho, Paisa Kamao',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),SizedBox(height:20),TextField(decoration:InputDecoration(labelText:'Shop Name'),onChanged:(v)=>shopName=v),TextField(decoration:InputDecoration(labelText:'Mobile Number'),keyboardType:TextInputType.number,onChanged:(v)=>sNumber=v),SizedBox(height:20),SizedBox(width:double.infinity,child:ElevatedButton(style:ElevatedButton.styleFrom(backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white),onPressed:(){if(shopName.isNotEmpty){sellers.add({'name':shopName,'number':sNumber,'approved':false}); setState(()=>isSeller=true); ScaffoldMessenger.of(c).showSnackBar(SnackBar(content:Text('Request Sent to Admin 8955116739')));}},child:Text('Register as Seller'))),Text('Admin (8955116739) approve karega tab bech paoge')] )));}
-return Scaffold(appBar:AppBar(title:Text('Seller Panel - $shopName')),body:Padding(padding:EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Card(color:Colors.orange[50],child:ListTile(title:Text('Status: Pending Admin Approval'),subtitle:Text('Admin: 8955116739 se approve karwaye'))),Divider(),Text('Product Add Karo',style:TextStyle(fontWeight:FontWeight.bold)),TextField(decoration:InputDecoration(labelText:'Product Name'),onChanged:(v)=>pName=v),TextField(decoration:InputDecoration(labelText:'Price'),keyboardType:TextInputType.number,onChanged:(v)=>pPrice=v),DropdownButton(value:cat,items:['Saree','Kurti','Kids','Mens'].map((e)=>DropdownMenuItem(value:e,child:Text(e))).toList(),onChanged:(v)=>setState(()=>cat=v.toString())),ElevatedButton(onPressed:(){if(pName.isNotEmpty){setState(()=>products.add(Product(id:DateTime.now().toString(),name:pName,shop:shopName,category:cat,price:double.tryParse(pPrice)??0,approved:false))); ScaffoldMessenger.of(c).showSnackBar(SnackBar(content:Text('Product sent for Admin approval!')));}},child:Text('Add Product for Approval')),Expanded(child:ListView(children:products.where((p)=>p.shop==shopName).map((p)=>ListTile(title:Text(p.name),subtitle:Text(p.approved?'Approved ✅':'Pending ⏳'),trailing:IconButton(icon:Icon(Icons.delete),onPressed:()=>setState(()=>products.remove(p))))).toList()))] )));}}
-
-class CartPage extends StatelessWidget{final VoidCallback onUpdate;CartPage({required this.onUpdate});@override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('Cart (${cart.length})')),body:Column(children:[Expanded(child:ListView.builder(itemCount:cart.length,itemBuilder:(_,i)=>ListTile(title:Text(cart[i].name),subtitle:Text('Seller: ${cart[i].shop}')))),ElevatedButton(onPressed:(){},child:Text('Place Order'))]));}}
-class ProfilePage extends StatelessWidget{ @override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('You')),body:ListView(children:[ListTile(title:Text('Owner: Vikky'),subtitle:Text('Admin Number: 8955116739')),ListTile(leading:Icon(Icons.admin_panel_settings),title:Text('Admin Panel'),onTap:()=>showDialog(context:c,builder:(_)=>AlertDialog(title:Text('Admin Login'),content:TextField(onChanged:(v)=>adminInput=v,decoration:InputDecoration(hintText:'Enter 8955116739')),actions:[TextButton(onPressed:(){if(adminInput==ADMIN_NUMBER) Navigator.push(c,MaterialPageRoute(builder:(_)=>AdminPanel())); else ScaffoldMessenger.of(c).showSnackBar(SnackBar(content:Text('Only 8955116739 allowed')));},child:Text('Login'))]))),ListTile(title:Text('Become Seller'),subtitle:Text('Apna shop kholo'))]));}}
-class AdminPanel extends StatefulWidget{ @override _AdminPanelState createState()=>_AdminPanelState();}
-class _AdminPanelState extends State<AdminPanel>{ @override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text('ADMIN - 8955116739 Only'),backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white),body:ListView(children:[Padding(padding:EdgeInsets.all(12),child:Text('Seller Requests (${sellers.length})',style:TextStyle(fontWeight:FontWeight.bold))),...sellers.map((s)=>Card(child:ListTile(title:Text(s['name']),subtitle:Text(s['number']),trailing:s['approved']?Text('Approved ✅'):ElevatedButton(onPressed:()=>setState(()=>s['approved']=true),child:Text('Approve'))))),Divider(),Padding(padding:EdgeInsets.all(12),child:Text('Product Approvals (${products.length})',style:TextStyle(fontWeight:FontWeight.bold))),...products.map((p)=>Card(child:ListTile(title:Text(p.name),subtitle:Text('${p.shop} - ₹${p.price} - ${p.approved?"Approved":"Pending"}'),trailing:Row(mainAxisSize:MainAxisSize.min,children:[if(!p.approved) IconButton(icon:Icon(Icons.check,color:Colors.green),onPressed:()=>setState(()=>p.approved=true)),IconButton(icon:Icon(Icons.delete,color:Colors.red),onPressed:()=>setState(()=>products.remove(p)))])))).toList()]));}}
+class MainPage extends StatefulWidget { @override _MainPageState createState() => _MainPageState(); }
+class _MainPageState extends State<MainPage> {
+  int i = 0;
+  Widget build(BuildContext c) {
+    List<Widget> pages = [ HomePage(), SellerPage(), CartPage(), ProfilePage() ];
+    return Scaffold(
+      body: pages[i],
+      bottomNavigationBar: BottomNavigationBar(currentIndex: i, selectedItemColor: Color(0xFF9F2089), unselectedItemColor: Colors.grey, onTap: (x){ setState((){ i = x; }); }, type: BottomNavigationBarType.fixed, items: [ BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"), BottomNavigationBarItem(icon: Icon(Icons.store), label: "Seller"), BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"), BottomNavigationBarItem(icon: Icon(Icons.person), label: "You") ]),
+    );
+  }
+}
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext c) {
+    return Scaffold(appBar: AppBar(title: Text("Avira Store", style: TextStyle(color: Color(0xFF9F2089), fontWeight: FontWeight.bold)), backgroundColor: Colors.white), body: GridView.builder(padding: EdgeInsets.all(8), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.7, crossAxisSpacing: 8, mainAxisSpacing: 8), itemCount: allProducts.length, itemBuilder: (ctx, index){ var p = allProducts[index]; if(!p.ok) return SizedBox(); return Card(child: Column(children: [ Expanded(child: Container(color: Colors.grey[200], child: Center(child: Icon(Icons.image, size: 40)))), Padding(padding: EdgeInsets.all(6), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [ Text(p.shop, style: TextStyle(fontSize: 10, color: Color(0xFF9F2089))), Text(p.name, style: TextStyle(fontSize: 13)), Text("₹${p.price.toInt()}", style: TextStyle(fontWeight: FontWeight.bold)), Text("Free Delivery", style: TextStyle(fontSize: 10, color: Colors.green)) ])) ])); }));
+  }
+}
+class SellerPage extends StatefulWidget { @override _SellerPageState createState() => _SellerPageState(); }
+class _SellerPageState extends State<SellerPage> {
+  String sName = "", sNum = "", pName = "", pPrice = "";
+  bool reg = false;
+  @override
+  Widget build(BuildContext c) {
+    if(!reg){ return Scaffold(appBar: AppBar(title: Text("Become Seller")), body: Padding(padding: EdgeInsets.all(20), child: Column(children: [ Icon(Icons.store, size: 80, color: Color(0xFF9F2089)), Text("Avira Pe Becho"), SizedBox(height: 20), TextField(decoration: InputDecoration(labelText: "Shop Name", border: OutlineInputBorder()), onChanged: (v){ sName = v; }), SizedBox(height: 10), TextField(decoration: InputDecoration(labelText: "Number", border: OutlineInputBorder()), onChanged: (v){ sNum = v; }), SizedBox(height: 20), SizedBox(width: double.infinity, child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF9F2089), foregroundColor: Colors.white), onPressed: (){ sellers.add({"name": sName, "number": sNum}); setState((){ reg = true; }); }, child: Text("Register")) ) ]))); }
+    return Scaffold(appBar: AppBar(title: Text("Seller Panel")), body: Padding(padding: EdgeInsets.all(16), child: Column(children: [ TextField(decoration: InputDecoration(labelText: "Product Name"), onChanged: (v){ pName = v; }), TextField(decoration: InputDecoration(labelText: "Price"), onChanged: (v){ pPrice = v; }), ElevatedButton(onPressed: (){ allProducts.add(Product(pName, sName, double.tryParse(pPrice)?? 0, false)); ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text("Sent to Admin 8955116739 for Approval"))); }, child: Text("Add Product")) ])));
+  }
+}
+class CartPage extends StatelessWidget { @override Widget build(BuildContext c){ return Scaffold(appBar: AppBar(title: Text("Cart")), body: Center(child: Text("Cart: ${cart.length} items"))); } }
+class ProfilePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext c) {
+    return Scaffold(appBar: AppBar(title: Text("You")), body: ListView(children: [ ListTile(title: Text("Vikky Owner"), subtitle: Text("Admin: 8955116739")), ListTile(leading: Icon(Icons.admin_panel_settings), title: Text("Admin Panel"), subtitle: Text("Only 8955116739"), onTap: (){ showDialog(context: c, builder: (ctx){ return AlertDialog(title: Text("Admin Login"), content: TextField(decoration: InputDecoration(hintText: "Enter 8955116739"), onChanged: (v){ inputNumber = v; }), actions: [ TextButton(onPressed: (){ if(inputNumber == adminNumber){ Navigator.pop(ctx); Navigator.push(c, MaterialPageRoute(builder: (c){ return AdminPage(); })); } else { ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text("Wrong Number! Only 8955116739"))); } }, child: Text("Login")) ]); }); }) ]));
+  }
+}
+class AdminPage extends StatefulWidget { @override _AdminPageState createState() => _AdminPageState(); }
+class _AdminPageState extends State<AdminPage> {
+  @override
+  Widget build(BuildContext c) {
+    return Scaffold(appBar: AppBar(title: Text("ADMIN - 8955116739 ONLY"), backgroundColor: Color(0xFF9F2089), foregroundColor: Colors.white), body: ListView(children: [ Padding(padding: EdgeInsets.all(10), child: Text("Products Approval", style: TextStyle(fontWeight: FontWeight.bold))),...allProducts.map((p){ return Card(child: ListTile(title: Text(p.name), subtitle: Text("${p.shop} - ₹${p.price}"), trailing: p.ok? Text("Approved") : ElevatedButton(onPressed: (){ setState((){ p.ok = true; }); }, child: Text("Approve")))); }).toList() ]));
+  }
+}
