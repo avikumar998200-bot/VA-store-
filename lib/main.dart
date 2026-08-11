@@ -1,26 +1,270 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-void main(){runApp(AviraApp());}
-class AviraApp extends StatelessWidget{@override Widget build(BuildContext c){return MaterialApp(debugShowCheckedModeBanner:false,home:MainScreen());}}
-class AdminSecure{static const String adminNum="8955116739";static String otp="";static String genOTP(){otp=(100000+Random().nextInt(900000)).toString();return otp;}static bool verify(String n,String o)=>n.trim()==adminNum && o==otp;static bool isAdmin(String n)=>n.trim()==adminNum;}
-class AdminPaymentSettings{static String adminPhonePe="8955116739";static String adminAccount="1234567890 - SBI - IFSC:SBIN0001";static String adminUPI="vikky@upi";static String adminGPay="8955116739";static double commissionPercent=10.0;}
-class UserModel{String id,name,phone,addr,aadhar,acc,pe,shop;bool isSeller,isApproved;double totalEarnings,pendingAmount;UserModel(this.id,this.name,this.phone,this.addr,{this.isSeller=false,this.isApproved=false,this.aadhar="",this.acc="",this.pe="",this.shop="",this.totalEarnings=0,this.pendingAmount=0});}
-class Product{String id,name,price,cat,sellerId,sellerName,sellerPhone,sellerAccount,sellerPhonePe;int stock;bool inStock,isApproved;Product(this.id,this.name,this.price,this.cat,this.sellerId,this.sellerName,this.sellerPhone,{this.stock=10,this.inStock=true,this.isApproved=false,this.sellerAccount="",this.sellerPhonePe=""});}
-class Order{String id,pName,price,date,custId,custName,custPhone,sellerId,status,paymentMethod;double adminCommission,sellerPayout;bool isPaidToSeller;Order(this.id,this.pName,this.price,this.date,this.custId,this.custName,this.custPhone,this.sellerId,{this.status="Paid to Admin",this.paymentMethod="UPI to Admin",this.adminCommission=0,this.sellerPayout=0,this.isPaidToSeller=false});}
-class CartItem{String pId;int qty;CartItem(this.pId,this.qty);}
-class Notif{String id,title,msg,date,pId,sId;Notif(this.id,this.title,this.msg,this.date,this.pId,this.sId);}
-List<UserModel> USERS=[];List<Product> PRODS=[];List<Order> ORDERS=[];List<Notif> ADMIN_NOTIFS=[];List<Notif> SELLER_NOTIFS=[];List<CartItem> CART=[];String? L_ID;String? L_NAME;
-class MainScreen extends StatefulWidget{@override _MainScreenState createState()=>_MainScreenState();}
-class _MainScreenState extends State<MainScreen>{int idx=0;@override Widget build(BuildContext c){return Scaffold(body:[HomeScreen(),SearchScreen(),CartScreen(),YouScreen()][idx],bottomNavigationBar:BottomNavigationBar(currentIndex:idx,selectedItemColor:Color(0xFF9F2089),onTap:(v)=>setState(()=>idx=v),items:[BottomNavigationBarItem(icon:Icon(Icons.home),label:"Home"),BottomNavigationBarItem(icon:Icon(Icons.search),label:"Search"),BottomNavigationBarItem(icon:Icon(Icons.shopping_cart),label:"Cart"),BottomNavigationBarItem(icon:Icon(Icons.person),label:"You")]));}}
-class HomeScreen extends StatefulWidget{@override _HomeScreenState createState()=>_HomeScreenState();}
-class _HomeScreenState extends State<HomeScreen>{String cat="All";void openPayment(Product p){String payMethod="UPI to Admin";showDialog(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx2,setSt)=>AlertDialog(title:Text("Pay to Admin - ${p.name}"),content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[Container(color:Colors.red[50],padding:EdgeInsets.all(10),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text("Paisa Sidha Admin Ke Paas Jayega",style:TextStyle(fontWeight:FontWeight.bold,color:Colors.red,fontSize:12)),SizedBox(height:5),Text("Admin PhonePe: ${AdminPaymentSettings.adminPhonePe}",style:TextStyle(fontWeight:FontWeight.bold,fontSize:11)),Text("Admin Account: ${AdminPaymentSettings.adminAccount}",style:TextStyle(fontSize:11)),Text("Admin UPI: ${AdminPaymentSettings.adminUPI}",style:TextStyle(fontSize:11)),])),SizedBox(height:10),Text("Product: ${p.name} | Price: Rs.${p.price}",style:TextStyle(fontWeight:FontWeight.bold)),SizedBox(height:10),Text("Payment Method (Admin ko jayega):",style:TextStyle(fontWeight:FontWeight.bold,fontSize:12)),RadioListTile(value:"UPI to Admin",groupValue:payMethod,title:Text("UPI/PhonePe/GPay - Admin ko",style:TextStyle(fontSize:11)),onChanged:(v)=>setSt(()=>payMethod=v.toString())),RadioListTile(value:"Bank to Admin",groupValue:payMethod,title:Text("Bank Transfer - Admin Account me",style:TextStyle(fontSize:11)),onChanged:(v)=>setSt(()=>payMethod=v.toString())),RadioListTile(value:"COD to Admin",groupValue:payMethod,title:Text("COD - Admin collect karega",style:TextStyle(fontSize:11)),onChanged:(v)=>setSt(()=>payMethod=v.toString())),Container(color:Colors.green[50],padding:EdgeInsets.all(8),child:Text("Commission: ${AdminPaymentSettings.commissionPercent}% - Admin ko: Rs.${(int.tryParse(p.price)??0)*AdminPaymentSettings.commissionPercent/100} | Seller ko: Rs.${(int.tryParse(p.price)??0)*(100-AdminPaymentSettings.commissionPercent)/100}",style:TextStyle(fontSize:10)))] )),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:Text("Cancel")),ElevatedButton(onPressed:(){Navigator.pop(ctx);buyProduct(p,payMethod);},child:Text("Pay Rs.${p.price} to Admin"),style:ElevatedButton.styleFrom(backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white))])));}void buyProduct(Product p,String payMethod){if(L_ID==null){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Pehle Login - You tab")));return;}if(!p.inStock||p.stock<=0){ADMIN_NOTIFS.insert(0,Notif(DateTime.now().millisecondsSinceEpoch.toString(),"OUT: ${p.name}","Out! Seller:${p.sellerName} Phone:${p.sellerPhone}","${DateTime.now().day}-${DateTime.now().month}",p.id,p.sellerId));ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Out of Stock!"),backgroundColor:Colors.red));return;}setState(()=>p.stock--);if(p.stock<=0){p.inStock=false;ADMIN_NOTIFS.insert(0,Notif(DateTime.now().millisecondsSinceEpoch.toString(),"OUT: ${p.name}","Out! Seller:${p.sellerName}","${DateTime.now().day}-${DateTime.now().month}",p.id,p.sellerId));}var u=USERS.firstWhere((e)=>e.id==L_ID,orElse:()=>UserModel("g","Guest","",""));double price=double.tryParse(p.price)??0;double commission=price*AdminPaymentSettings.commissionPercent/100;double payout=price-commission;ORDERS.add(Order(DateTime.now().millisecondsSinceEpoch.toString(),p.name,p.price,"${DateTime.now().day}-${DateTime.now().month}",L_ID!,L_NAME!,u.phone,p.sellerId,paymentMethod:payMethod,adminCommission:commission,sellerPayout:payout,isPaidToSeller:false,status:"Paid to Admin"));var seller=USERS.where((x)=>x.id==p.sellerId).toList();if(seller.isNotEmpty){seller[0].pendingAmount+=payout;}SELLER_NOTIFS.insert(0,Notif(DateTime.now().millisecondsSinceEpoch.toString(),"New Order: ${p.name}","Customer $L_NAME ne kharida | Pay:$payMethod | Admin ke paas Rs.${p.price} | Aapko Rs.$payout milega","${DateTime.now().day}-${DateTime.now().month}",p.id,p.sellerId));ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Paid Rs.${p.price} to Admin! Seller ko Rs.$payout Admin bhejega"),backgroundColor:Colors.green));}@override Widget build(BuildContext c){var list=PRODS.where((p)=>p.isApproved && (cat=="All"||p.cat==cat)).toList();return Scaffold(appBar:AppBar(backgroundColor:Colors.white,title:Text("Avira - Pay to Admin",style:TextStyle(color:Color(0xFF9F2089),fontWeight:FontWeight.bold,fontSize:14))),body:Column(children:[Container(color:Colors.red[100],padding:EdgeInsets.all(6),child:Text("Sab Paisa Admin ke paas: ${AdminPaymentSettings.adminPhonePe} - Admin change kar sakta hai",style:TextStyle(fontSize:9,fontWeight:FontWeight.bold))),SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:["All","Saree","Kurti","Lehenga","Suits"].map((e)=>Padding(padding:EdgeInsets.all(4),child:ChoiceChip(label:Text(e),selected:cat==e,onSelected:(v)=>setState(()=>cat=e)))).toList())),Expanded(child:list.isEmpty?Center(child:Text("No Products")):GridView.builder(padding:EdgeInsets.all(8),gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,childAspectRatio:0.65,crossAxisSpacing:8,mainAxisSpacing:8),itemCount:list.length,itemBuilder:(ctx,i){var p=list[i];return Card(child:Column(children:[Expanded(child:Container(color:Colors.grey[200],child:Center(child:Icon(Icons.image)))),Padding(padding:EdgeInsets.all(6),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(p.name,style:TextStyle(fontWeight:FontWeight.bold,fontSize:11)),Text("By:${p.sellerName}",style:TextStyle(fontSize:9,color:Color(0xFF9F2089))),Text("Rs.${p.price} | Stock:${p.stock}",style:TextStyle(fontSize:11,color:p.inStock?Colors.green:Colors.red)),SizedBox(width:double.infinity,child:ElevatedButton(onPressed:()=>openPayment(p),child:Text(p.inStock?"Pay to Admin":"Out",style:TextStyle(fontSize:8)),style:ElevatedButton.styleFrom(backgroundColor:p.inStock?Color(0xFF9F2089):Colors.grey,foregroundColor:Colors.white)))]))])) ;}))]));}}
-class SearchScreen extends StatefulWidget{@override _SearchScreenState createState()=>_SearchScreenState();}
-class _SearchScreenState extends State<SearchScreen>{String q="";@override Widget build(BuildContext c){var list=PRODS.where((p)=>p.isApproved && p.name.toLowerCase().contains(q.toLowerCase())).toList();return Scaffold(appBar:AppBar(title:Text("Search"),backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white),body:Column(children:[Padding(padding:EdgeInsets.all(10),child:TextField(decoration:InputDecoration(hintText:"Search",prefixIcon:Icon(Icons.search),border:OutlineInputBorder()),onChanged:(v)=>setState(()=>q=v))),Expanded(child:ListView.builder(itemCount:list.length,itemBuilder:(ctx,i){var p=list[i];return Card(child:ListTile(title:Text("${p.name} - Rs.${p.price}"),subtitle:Text("By:${p.sellerName} | Stock:${p.stock}")));}))]));}}
-class CartScreen extends StatefulWidget{@override _CartScreenState createState()=>_CartScreenState();}
-class _CartScreenState extends State<CartScreen>{String payMethod="UPI to Admin";@override Widget build(BuildContext c){var items=CART.map((e){var p=PRODS.where((x)=>x.id==e.pId).toList();return p.isNotEmpty?{"prod":p[0],"qty":e.qty,"cart":e}:null;}).where((e)=>e!=null).toList();int total=items.fold(0,(s,e){var p=e!["prod"] as Product;var q=e["qty"] as int;return s+(int.tryParse(p.price)??0)*q;});double commission=total*AdminPaymentSettings.commissionPercent/100;double payout=total-commission;return Scaffold(appBar:AppBar(title:Text("Cart ${CART.length}"),backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white),body:Column(children:[Container(color:Colors.red[50],padding:EdgeInsets.all(8),child:Text("Pay to Admin: ${AdminPaymentSettings.adminPhonePe} | ${AdminPaymentSettings.adminAccount}",style:TextStyle(fontSize:10,fontWeight:FontWeight.bold))),Expanded(child:items.isEmpty?Center(child:Text("Cart Empty")):ListView.builder(itemCount:items.length,itemBuilder:(ctx,i){var e=items[i]!;var p=e["prod"] as Product;var q=e["qty"] as int;var ci=e["cart"] as CartItem;return Card(child:ListTile(title:Text(p.name),subtitle:Text("Rs.${p.price} x $q"),trailing:IconButton(icon:Icon(Icons.delete,color:Colors.red),onPressed:(){setState(()=>CART.remove(ci));})));})),Container(padding:EdgeInsets.all(12),color:Colors.grey[100],child:Column(children:[Row(children:[Text("Total:",style:TextStyle(fontWeight:FontWeight.bold)),Spacer(),Text("Rs.$total",style:TextStyle(fontWeight:FontWeight.bold,fontSize:16))]),Text("Commission ${AdminPaymentSettings.commissionPercent}%: Rs.$commission | Seller Payout: Rs.$payout",style:TextStyle(fontSize:10,color:Colors.red)),Row(children:[Expanded(child:RadioListTile(value:"UPI to Admin",groupValue:payMethod,title:Text("UPI Admin",style:TextStyle(fontSize:10)),onChanged:(v)=>setState(()=>payMethod=v.toString()))),Expanded(child:RadioListTile(value:"Bank to Admin",groupValue:payMethod,title:Text("Bank Admin",style:TextStyle(fontSize:10)),onChanged:(v)=>setState(()=>payMethod=v.toString())))]),SizedBox(width:double.infinity,child:ElevatedButton(onPressed:(){if(L_ID==null)return;for(var e in items){var p=e!["prod"] as Product;var q=e["qty"] as int;if(p.stock>=q){setState(()=>p.stock-=q);if(p.stock<=0)p.inStock=false;double price=double.tryParse(p.price)??0;double comm=price*AdminPaymentSettings.commissionPercent/100*q;double pay=price*q-comm;var u=USERS.firstWhere((x)=>x.id==L_ID);ORDERS.add(Order(DateTime.now().millisecondsSinceEpoch.toString(),p.name,p.price,"${DateTime.now().day}-${DateTime.now().month}",L_ID!,L_NAME!,u.phone,p.sellerId,paymentMethod:payMethod,adminCommission:comm,sellerPayout:pay,isPaidToSeller:false,status:"Paid to Admin"));var seller=USERS.where((x)=>x.id==p.sellerId).toList();if(seller.isNotEmpty)seller[0].pendingAmount+=pay;}}setState(()=>CART.clear());ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Paid Rs.$total to Admin!"),backgroundColor:Colors.green));},child:Text("Pay Rs.$total to Admin - $payMethod"),style:ElevatedButton.styleFrom(backgroundColor:Color(0xFF9F2089),foregroundColor:Colors.white)))]))])) ;}}
-class YouScreen extends StatefulWidget{@override _YouScreenState createState()=>_YouScreenState();}
-class _YouScreenState extends State<YouScreen>{void adminOTP(){String num="",otp="",gen="";showDialog(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx2,setSt)=>AlertDialog(title:Text("Admin OTP Login"),content:Column(mainAxisSize:MainAxisSize.min,children:[Text("Number tum daloge 8955116739",style:TextStyle(fontSize:11)),TextField(decoration:InputDecoration(labelText:"Admin Number",hintText:"8955116739",border:OutlineInputBorder()),keyboardType:TextInputType.phone,onChanged:(v)=>num=v),SizedBox(height:10),if(gen.isNotEmpty)...[Container(color:Colors.green[50],padding:EdgeInsets.all(8),child:Text("OTP:$gen",style:TextStyle(fontWeight:FontWeight.bold))),TextField(decoration:InputDecoration(labelText:"OTP",border:OutlineInputBorder()),onChanged:(v)=>otp=v),]]),actions:[if(gen.isEmpty)TextButton(onPressed:(){if(!AdminSecure.isAdmin(num)){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Ye Admin Number nahi!"),backgroundColor:Colors.red));return;}String o=AdminSecure.genOTP();setSt(()=>gen=o);},child:Text("Send OTP")),if(gen.isNotEmpty)TextButton(onPressed:(){if(AdminSecure.verify(num,otp)){Navigator.pop(ctx);L_ID="ADMIN";L_NAME="Admin";Navigator.push(context,MaterialPageRoute(builder:(_)=>AdminPanel(adminNum:num)));setState((){});}else ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Wrong OTP"),backgroundColor:Colors.red));},child:Text("Verify"))])));}void userLogin(bool seller){String name="",phone="",addr="",aad="",acc="",pe="",shop="";showDialog(context:context,builder:(ctx)=>AlertDialog(title:Text(seller?"Seller Registration - Payment Details":"Customer Registration"),content:SingleChildScrollView(child:Column(children:[TextField(decoration:InputDecoration(labelText:"Name*",border:OutlineInputBorder()),onChanged:(v)=>name=v),SizedBox(height:6),TextField(decoration:InputDecoration(labelText:"Phone* - Sirf Admin dekhega",border:OutlineInputBorder()),keyboardType:TextInputType.phone,onChanged:(v)=>phone=v),TextField(decoration:InputDecoration(labelText:"Address",border:OutlineInputBorder()),onChanged:(v)=>addr=v),if(seller)...[SizedBox(height:6),Text("Payment - Jahan Admin Paisa Bhejega (Compulsory)",style:TextStyle(fontWeight:FontWeight.bold,fontSize:11,color:Colors.green)),TextField(decoration:InputDecoration(labelText:"Account Number* - Admin yahan bhejega",border:OutlineInputBorder()),onChanged:(v)=>acc=v),SizedBox(height:6),TextField(decoration:InputDecoration(labelText:"PhonePe/GPay Number* - Admin yahan bhejega",border:OutlineInputBorder()),keyboardType:TextInputType.phone,onChanged:(v)=>pe=v),TextField(decoration:InputDecoration(labelText:"Shop Name",border:OutlineInputBorder()),onChanged:(v)=>shop=v),TextField(decoration:InputDecoration(labelText:"Aadhar - Sirf Admin",border:OutlineInputBorder()),onChanged:(v)=>aad=v),],])),actions:[TextButton(onPressed:(){if(name.isEmpty||phone.isEmpty)return;if(seller && (acc.isEmpty||pe.isEmpty)){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Account & PhonePe bharo - Admin wahan paisa bhejega"),backgroundColor:Colors.red));return;}String id="U_${DateTime.now().millisecondsSinceEpoch}";USERS.add(UserModel(id,name,phone,addr,isSeller:seller,isApproved:false,aadhar:aad,acc:acc,pe:pe,shop:shop));L_ID=id;L_NAME=name;Navigator.pop(ctx);if(seller)Navigator.push(context,MaterialPageRoute(builder:(_)=>SellerPanel(sId:id,sName:name)));setState((){});},child:Text("Register"))]));}@override Widget build(BuildContext c){return Scaffold(appBar:AppBar(title:Text("You - Avira")),body:Column(children:[Card(color:Colors.red[50],child:ListTile(leading:Icon(Icons.admin_panel_settings,color:Colors.red),title:Text("Admin Login - OTP 8955116739"),subtitle:Text("Paisa Admin ke paas: ${AdminPaymentSettings.adminPhonePe} | Change kar sakta hai"),onTap:adminOTP)),ListTile(leading:Icon(Icons.person,color:Colors.blue),title:Text("Customer Login"),subtitle:Text("Paisa Admin ko jayega"),onTap:()=>userLogin(false)),ListTile(leading:Icon(Icons.store,color:Colors.green),title:Text("Seller Login - Account/PhonePe"),subtitle:Text("Add product pe Account/PhonePe dalo - Admin wahan bhejega"),onTap:()=>userLogin(true)),Padding(padding:EdgeInsets.all(10),child:Container(color:Colors.green[50],padding:EdgeInsets.all(8),child:Column(children:[Text("BUILD FIXED - No Error",style:TextStyle(color:Colors.green,fontWeight:FontWeight.bold,fontSize:11)),Text("Payment: Customer -> Admin (${AdminPaymentSettings.adminPhonePe}) -> Seller (Auto/Manual)",style:TextStyle(fontSize:10)),Text("Admin apna PhonePe/Account/Commission change kar sakta hai",style:TextStyle(fontSize:10)),])))]));}}
-class SellerPanel extends StatefulWidget{String sId,sName;SellerPanel({required this.sId,required this.sName});@override _SellerPanelState createState()=>_SellerPanelState();}
-class _SellerPanelState extends State<SellerPanel>{String tab="Prod";@override Widget build(BuildContext c){var myP=PRODS.where((p)=>p.sellerId==widget.sId).toList();var myO=ORDERS.where((o)=>o.sellerId==widget.sId).toList();var myN=SELLER_NOTIFS.where((n)=>n.sId==widget.sId).toList();var me=USERS.where((u)=>u.id==widget.sId).toList();double pending=me.isNotEmpty?me[0].pendingAmount:0;double earned=me.isNotEmpty?me[0].totalEarnings:0;double totalSale=myO.fold(0,(s,o)=>s+(double.tryParse(o.price)??0));return Scaffold(appBar:AppBar(title:Text("Seller:${widget.sName}"),backgroundColor:Colors.green,foregroundColor:Colors.white),body:Column(children:[Container(color:Colors.green[100],padding:EdgeInsets.all(8),child:Column(children:[Text("Payment Details - Admin yahan bhejega",style:TextStyle(fontWeight:FontWeight.bold,fontSize:11)),if(me.isNotEmpty)...[Text("Account:${me[0].acc} | PhonePe:${me[0].pe}",style:TextStyle(fontSize:10,fontWeight:FontWeight.bold)),Text("Total Sale:Rs.$totalSale | Pending:Rs.$pending | Earned:Rs.$earned | Commission:${AdminPaymentSettings.commissionPercent}%",style:TextStyle(fontSize:10)),]])),SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:[ChoiceChip(label:Text("Products ${myP.length}"),selected:tab=="Prod",onSelected:(v)=>setState(()=>tab="Prod")),SizedBox(width:5),ChoiceChip(label:Text("Orders ${myO.length}"),selected:tab=="Ord",onSelected:(v)=>setState(()=>tab="Ord")),SizedBox(width:5),ChoiceChip(label:Text("Payment"),selected:tab=="Pay",onSelected:(v)=>setState(()=>tab="Pay")),])),if(tab=="Prod")Expanded(child:Column(children:[Padding(padding:EdgeInsets.all(8),child:Row(children:[Expanded(child:Text("Delete/Edit - Fixed",style:TextStyle(fontSize:11,fontWeight:FontWeight.bold))),ElevatedButton(onPressed:(){String n="",pr="",cat="Saree",st="10",acc="",pe="";var user=USERS.firstWhere((e)=>e.id==widget.sId,orElse:()=>UserModel("","","",""));acc=user.acc;pe=user.pe;showDialog(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx2,setSt)=>AlertDialog(title:Text("Add Product - Payment"),content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[TextField(decoration:InputDecoration(labelText:"Product Name",border:OutlineInputBorder()),onChanged:(v)=>n=v),TextField(decoration:InputDecoration(labelText:"Price",border:OutlineInputBorder()),keyboardType:TextInputType.number,onChanged:(v)=>pr=v),TextField(decoration:InputDecoration(labelText:"Category",border:OutlineInputBorder()),onChanged:(v)=>cat=v),TextField(decoration:InputDecoration(labelText:"Stock",border:OutlineInputBorder()),controller:TextEditingController(text:"10"),onChanged:(v)=>st=v),SizedBox(height:8),Text("Payment - Admin yahan bhejega:",style:TextStyle(fontWeight:FontWeight.bold,fontSize:11)),TextField(decoration:InputDecoration(labelText:"Account Number",border:OutlineInputBorder()),controller:TextEditingController(text:acc),onChanged:(v)=>acc=v),TextField(decoration:InputDecoration(labelText:"PhonePe Number",border:OutlineInputBorder()),controller:TextEditingController(text:pe),onChanged:(v)=>pe=v),Container(color:Colors.green[50],padding:EdgeInsets.all(6),child:Text("Admin Commission ${AdminPaymentSettings.commissionPercent}% kat ke Rs.${(double.tryParse(pr)??0)*(100-AdminPaymentSettings.commissionPercent)/100} aapko milega",style:TextStyle(fontSize:9))),])),actions:[TextButton(onPressed:(){var u=USERS.firstWhere((e)=>e.id==widget.sId);setState(()=>PRODS.add(Product(DateTime.now().millisecondsSinceEpoch.toString(),n,pr,cat,widget.sId,widget.sName,u.phone,stock:int.tryParse(st)??10,sellerAccount:acc.isEmpty?u.acc:acc,sellerPhonePe:pe.isEmpty?u.pe:pe)));Navigator.pop(ctx);},child:Text("Add"))])));},child:Text("+ Add"))])),Expanded(child:ListView.builder(itemCount:myP.length,itemBuilder:(ctx,i){var p=myP[i];String status=p.isApproved?"Approved":"Pending";return Card(child:ListTile(leading:CircleAvatar(child:Text("${p.stock}")),title:Text("${p.name} - Rs.${p.price} $status"),subtitle:Text("Stock:${p.stock} | Payout to: Acc:${p.sellerAccount} Pe:${p.sellerPhonePe}"),trailing:Row(mainAxisSize:MainAxisSize.min,children:[IconButton(icon:Icon(Icons.edit,color:Colors.blue,size:18),onPressed:(){String n=p.name,pr=p.price,cat=p.cat,st=p.stock.toString(),acc=p.sellerAccount,pe=p.sellerPhonePe;showDialog(context:context,builder:(ctx)=>AlertDialog(title:Text("Edit Product Payment"),content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[TextField(controller:TextEditingController(text:n),decoration:InputDecoration(labelText:"Name"),onChanged:(v)=>n=v),TextField(controller:TextEditingController(text:pr),decoration:InputDecoration(labelText:"Price"),onChanged:(v)=>pr=v),TextField(controller:TextEditingController(text:acc),decoration:InputDecoration(labelText:"Account - Admin yahan bhejega"),onChanged:(v)=>acc=v),TextField(controller:TextEditingController(text:pe),decoration:InputDecoration(labelText:"PhonePe - Admin yahan bhejega"),onChanged:(v)=>pe=v),TextField(controller:TextEditingController(text:st),decoration:InputDecoration(labelText:"Stock"),onChanged:(v)=>st=v),])),actions:[TextButton(onPressed:(){setState(()=>{p.name=n,p.price=pr,p.stock=int.tryParse(st)??0,p.sellerAccount=acc,p.sellerPhonePe=pe,p.inStock=p.stock>0});Navigator.pop(ctx);},child:Text("Update"))]));}),IconButton(icon:Icon(Icons.delete,color:Colors.red,size:18),onPressed:(){setState(()=>PRODS.remove(p));}),])) ;}))])),if(tab=="Ord")Expanded(child:ListView.builder(itemCount:myO.length,itemBuilder:(ctx,i){var o=myO[i];String paidStatus=o.isPaidToSeller?"Paid":"Pending from Admin";return Card(color:o.isPaidToSeller?Colors.green[50]:Colors.orange[50],child:ListTile(title:Text("${o.pName} - Rs.${o.price} - $paidStatus"),subtitle:Text("Cust:${o.custName} | Pay:${o.paymentMethod} | Comm:Rs.${o.adminCommission} | You Get:Rs.${o.sellerPayout} | ${o.date}")));})),if(tab=="Pay")Expanded(child:ListView(children:[Card(color:Colors.green[100],child:ListTile(title:Text("Total Sale: Rs.$totalSale"),subtitle:Text("Commission ${AdminPaymentSettings.commissionPercent}%: Rs.${totalSale*AdminPaymentSettings.commissionPercent/100}"))),Card(color:Colors.orange[100],child:ListTile(title:Text("Pending from Admin: Rs.$pending"),subtitle:Text("Admin aapke Account ${me.isNotEmpty?me[0].acc:''} / PhonePe ${me.isNotEmpty?me[0].pe:''} pe bhejega"))),Card(color:Colors.blue[100],child:ListTile(title:Text("Total Earned: Rs.$earned"),subtitle:Text("Admin ne bhej diya"))),])),]));}}
-class AdminPanel extends StatefulWidget{String adminNum;AdminPanel({required this.adminNum});@override _AdminPanelState createState()=>_AdminPanelState();}
-class _AdminPanelState extends State<AdminPanel>{String tab="Orders";@override Widget build(BuildContext c){double totalSale=ORDERS.fold(0,(s,o)=>s+(double.tryParse(o.price)??0));double totalCommission=ORDERS.fold(0,(s,o)=>s+o.adminCommission);double totalPayout=ORDERS.fold(0,(s,o)=>s+o.sellerPayout);double pendingPayout=ORDERS.where((o)=>!o.isPaidToSeller).fold(0,(s,o)=>s+o.sellerPayout);return Scaffold(appBar:AppBar(title:Text("ADMIN ${widget.adminNum} - Pay System"),backgroundColor:Colors.red,foregroundColor:Colors.white),body:Column(children:[Container(color:Colors.red[100],padding:EdgeInsets.all(8),child:Column(children:[Text("Paisa Admin Ke Paas: ${AdminPaymentSettings.adminPhonePe} | ${AdminPaymentSettings.adminAccount}",style:TextStyle(fontSize:10,fontWeight:FontWeight.bold)),Text("Sale:Rs.$totalSale | Commission ${AdminPaymentSettings.commissionPercent}%:Rs.$totalCommission | Seller ko dena:Rs.$totalPayout | Pending:Rs.$pendingPayout",style:TextStyle(fontSize:9,fontWeight:FontWeight.bold,color:Colors.red)),])),SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:[ChoiceChip(label:Text("Settings"),selected:tab=="Settings",onSelected:(v)=>setState(()=>tab="Settings")),SizedBox(width:5),ChoiceChip(label:Text("Orders ${ORDERS.length}"),selected:tab=="Orders",onSelected:(v)=>setState(()=>tab="Orders")),SizedBox(width:5),ChoiceChip(label:Text("Users ${USERS.length}"),selected:tab=="Users",onSelected:(v)=>setState(()=>tab="Users")),SizedBox(width:5),ChoiceChip(label:Text("Products ${PRODS.length}"),selected:tab=="Products",onSelected:(v)=>setState(()=>tab="Products")),])),if(tab=="Settings")Expanded(child:ListView(children:[Card(color:Colors.red[50],child:Padding(padding:EdgeInsets.all(12),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text("Admin Payment Settings - Change Kar Sakte Ho",style:TextStyle(fontWeight:FontWeight.bold,color:Colors.red)),SizedBox(height:10),TextField(controller:TextEditingController(text:AdminPaymentSettings.adminPhonePe),decoration:InputDecoration(labelText:"Admin PhonePe Number - Customer yahan bhejega",border:OutlineInputBorder()),onChanged:(v)=>AdminPaymentSettings.adminPhonePe=v),SizedBox(height:8),TextField(controller:TextEditingController(text:AdminPaymentSettings.adminAccount),decoration:InputDecoration(labelText:"Admin Account Number + Bank + IFSC",border:OutlineInputBorder()),onChanged:(v)=>AdminPaymentSettings.adminAccount=v),SizedBox(height:8),TextField(controller:TextEditingController(text:AdminPaymentSettings.adminUPI),decoration:InputDecoration(labelText:"Admin UPI ID",border:OutlineInputBorder()),onChanged:(v)=>AdminPaymentSettings.adminUPI=v),SizedBox(height:8),TextField(controller:TextEditingController(text:AdminPaymentSettings.adminGPay),decoration:InputDecoration(labelText:"Admin GPay Number",border:OutlineInputBorder()),onChanged:(v)=>AdminPaymentSettings.adminGPay=v),SizedBox(height:8),TextField(controller:TextEditingController(text:"${AdminPaymentSettings.commissionPercent}"),decoration:InputDecoration(labelText:"Commission %",border:OutlineInputBorder()),keyboardType:TextInputType.number,onChanged:(v)=>AdminPaymentSettings.commissionPercent=double.tryParse(v)??10),SizedBox(height:10),ElevatedButton(onPressed:(){setState((){});ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Admin Payment Settings Updated!"),backgroundColor:Colors.green));},child:Text("Save Settings"),style:ElevatedButton.styleFrom(backgroundColor:Colors.red,foregroundColor:Colors.white))]))),Card(child:ListTile(title:Text("Auto Pay to Sellers"),subtitle:Text("Sab pending sellers ko auto pay"),trailing:ElevatedButton(onPressed:(){for(var o in ORDERS.where((x)=>!x.isPaidToSeller)){o.isPaidToSeller=true;var seller=USERS.where((u)=>u.id==o.sellerId).toList();if(seller.isNotEmpty){seller[0].pendingAmount-=o.sellerPayout;if(seller[0].pendingAmount<0)seller[0].pendingAmount=0;seller[0].totalEarnings+=o.sellerPayout;}}setState((){});ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Auto Paid Rs.$pendingPayout to All Sellers!"),backgroundColor:Colors.green));},child:Text("Auto Pay Rs.$pendingPayout")))),])),if(tab=="Users")Expanded(child:ListView.builder(itemCount:USERS.length,itemBuilder:(ctx,i){var u=USERS[i];String role=u.isSeller?"SELLER":"CUSTOMER";String approved=u.isApproved?"Approved":"Pending";return Card(child:ExpansionTile(title:Text("${u.name} - $role $approved"),subtitle:Text("Phone:${u.phone} | Acc:${u.acc} | Pe:${u.pe} | Pending:Rs.${u.pendingAmount}",style:TextStyle(fontSize:9,fontWeight:FontWeight.bold)),children:[Padding(padding:EdgeInsets.all(10),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(color:Colors.green[50],padding:EdgeInsets.all(8),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text("SELLER PAYMENT - Admin yahan bhejega:",style:TextStyle(fontWeight:FontWeight.bold,color:Colors.green,fontSize:11)),Text("Account:${u.acc}",style:TextStyle(fontWeight:FontWeight.bold)),Text("PhonePe:${u.pe}"),Text("Phone:${u.phone}"),Text("Pending:Rs.${u.pendingAmount} | Earned:Rs.${u.totalEarnings}"),])),Row(children:[if(!u.isApproved)ElevatedButton(onPressed:(){setState(()=>u.isApproved=true);},child:Text("Approve"),style:ElevatedButton.styleFrom(backgroundColor:Colors.green)),SizedBox(width:5),ElevatedButton(onPressed:(){setState(()=>USERS.removeAt(i));},child:Text("Delete"),style:ElevatedButton.styleFrom(backgroundColor:Colors.red)),SizedBox(width:5),if(u.isSeller && u.pendingAmount>0)ElevatedButton(onPressed:(){setState((){for(var o in ORDERS.where((x)=>x.sellerId==u.id &&!x.isPaidToSeller)){o.isPaidToSeller=true;}u.totalEarnings+=u.pendingAmount;u.pendingAmount=0;});ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Paid to ${u.name} - ${u.pe} / ${u.acc}"),backgroundColor:Colors.green));},child:Text("Pay Rs.${u.pendingAmount}"),style:ElevatedButton.styleFrom(backgroundColor:Colors.blue)),])]))]));})),if(tab=="Products")Expanded(child:ListView.builder(itemCount:PRODS.length,itemBuilder:(ctx,i){var p=PRODS[i];String approved=p.isApproved?"Approved":"Pending";return Card(child:ListTile(title:Text("${p.name} - Rs.${p.price} $approved"),subtitle:Text("Seller:${p.sellerName} | Phone:${p.sellerPhone} | Acc:${p.sellerAccount} | Pe:${p.sellerPhonePe} | Stock:${p.stock}"),trailing:Row(mainAxisSize:MainAxisSize.min,children:[if(!p.isApproved)IconButton(icon:Icon(Icons.check,color:Colors.green),onPressed:(){setState(()=>p.isApproved=true);}),IconButton(icon:Icon(Icons.delete,color:Colors.red),onPressed:(){setState(()=>PRODS.removeAt(i));}),])));})),if(tab=="Orders")Expanded(child:ListView.builder(itemCount:ORDERS.length,itemBuilder:(ctx,i){var o=ORDERS[i];String paidStatus=o.isPaidToSeller?"Paid to Seller":"Pending - Admin ke paas";var seller=USERS.where((u)=>u.id==o.sellerId).toList();String sellerAcc=seller.isNotEmpty?seller[0].acc:"";String sellerPe=seller.isNotEmpty?seller[0].pe:"";return Card(color:o.isPaidToSeller?Colors.green[50]:Colors.orange[50],child:ExpansionTile(title:Text("${o.pName} - Rs.${o.price} - $paidStatus"),subtitle:Text("Cust:${o.custName} | Pay:${o.paymentMethod} | Comm:Rs.${o.adminCommission} | Seller Get:Rs.${o.sellerPayout} | ${o.date}"),children:[Padding(padding:EdgeInsets.all(10),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text("PAYMENT FLOW:",style:TextStyle(fontWeight:FontWeight.bold,color:Colors.red)),Text("1. Customer ${o.custName} (${o.custPhone}) ne Rs.${o.price} Admin ko diya via ${o.paymentMethod}"),Text("2. Admin Account: ${AdminPaymentSettings.adminAccount} | PhonePe: ${AdminPaymentSettings.adminPhonePe} me aaya"),Text("3. Admin Commission: Rs.${o.adminCommission} (${AdminPaymentSettings.commissionPercent}%) rakhega"),Text("4. Seller ko dena: Rs.${o.sellerPayout} -> Acc:$sellerAcc | Pe:$sellerPe"),SizedBox(height:8),Row(children:[if(!o.isPaidToSeller)ElevatedButton(onPressed:(){setState((){o.isPaidToSeller=true;o.status="Paid to Seller";var s=USERS.where((u)=>u.id==o.sellerId).toList();if(s.isNotEmpty){s[0].pendingAmount-=o.sellerPayout;if(s[0].pendingAmount<0)s[0].pendingAmount=0;s[0].totalEarnings+=o.sellerPayout;}});ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("Paid Rs.${o.sellerPayout} to Seller $sellerPe / $sellerAcc"),backgroundColor:Colors.green));},child:Text("Pay Seller Rs.${o.sellerPayout} - Manual"),style:ElevatedButton.styleFrom(backgroundColor:Colors.blue)),SizedBox(width:5),ElevatedButton(onPressed:(){setState((){o.isPaidToSeller=true;var s=USERS.where((u)=>u.id==o.sellerId).toList();if(s.isNotEmpty){s[0].pendingAmount-=o.sellerPayout;if(s[0].pendingAmount<0)s[0].pendingAmount=0;s[0].totalEarnings+=o.sellerPayout;}});},child:Text("Auto Pay"),style:ElevatedButton.styleFrom(backgroundColor:Colors.green)),])]))]));})),]));}}
+
+void main() {
+  runApp(AviraApp());
+}
+
+class AviraApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext c) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MainScreen(),
+    );
+  }
+}
+
+class AdminSecure {
+  static const String adminNum = '8955116739';
+  static String otp = '';
+  static String genOTP() {
+    otp = (100000 + Random().nextInt(900000)).toString();
+    return otp;
+  }
+  static bool verify(String n, String o) {
+    return n.trim() == adminNum && o == otp;
+  }
+  static bool isAdmin(String n) {
+    return n.trim() == adminNum;
+  }
+}
+
+class AdminPay {
+  static String phonePe = '8955116739';
+  static String account = '1234567890 SBI IFSC SBIN0001';
+  static String upi = 'vikky@upi';
+  static String gpay = '8955116739';
+  static double commission = 10.0;
+}
+
+class UserModel {
+  String id; String name; String phone; String addr;
+  String aadhar; String acc; String pe; String shop;
+  bool isSeller; bool isApproved;
+  double pending; double earned;
+  UserModel(this.id, this.name, this.phone, this.addr,
+      {this.isSeller = false, this.isApproved = false, this.aadhar = '', this.acc = '', this.pe = '', this.shop = '', this.pending = 0, this.earned = 0});
+}
+
+class Product {
+  String id; String name; String price; String cat;
+  String sellerId; String sellerName; String sellerPhone;
+  String sellerAcc; String sellerPe;
+  int stock; bool inStock; bool isApproved;
+  Product(this.id, this.name, this.price, this.cat, this.sellerId, this.sellerName, this.sellerPhone,
+      {this.stock = 10, this.inStock = true, this.isApproved = false, this.sellerAcc = '', this.sellerPe = ''});
+}
+
+class Order {
+  String id; String pName; String price; String date;
+  String custId; String custName; String custPhone; String sellerId;
+  String status; String payMethod;
+  double comm; double payout; bool isPaid;
+  Order(this.id, this.pName, this.price, this.date, this.custId, this.custName, this.custPhone, this.sellerId,
+      {this.status = 'Paid to Admin', this.payMethod = 'UPI to Admin', this.comm = 0, this.payout = 0, this.isPaid = false});
+}
+
+class CartItem { String pId; int qty; CartItem(this.pId, this.qty); }
+class Notif { String id; String title; String msg; String date; String pId; String sId; Notif(this.id, this.title, this.msg, this.date, this.pId, this.sId); }
+
+List<UserModel> USERS = [];
+List<Product> PRODS = [];
+List<Order> ORDERS = [];
+List<Notif> ADMIN_NOTIFS = [];
+List<Notif> SELLER_NOTIFS = [];
+List<CartItem> CART = [];
+String? L_ID; String? L_NAME;
+
+class MainScreen extends StatefulWidget { @override _MainScreenState createState() => _MainScreenState(); }
+class _MainScreenState extends State<MainScreen> {
+  int idx = 0;
+  @override Widget build(BuildContext c) {
+    return Scaffold(
+      body: [HomeScreen(), SearchScreen(), CartScreen(), YouScreen()][idx],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: idx, selectedItemColor: Color(0xFF9F2089),
+        onTap: (v) => setState(() => idx = v),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'You'),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget { @override _HomeScreenState createState() => _HomeScreenState(); }
+class _HomeScreenState extends State<HomeScreen> {
+  String cat = 'All';
+  void openPay(Product p) {
+    String method = 'UPI to Admin';
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx2, setSt) => AlertDialog(
+      title: Text('Pay to Admin'),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(color: Colors.red[50], padding: EdgeInsets.all(8), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Paisa Sidha Admin Ke Paas Jayega', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 12)),
+          Text('PhonePe: ${AdminPay.phonePe}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+          Text('Account: ${AdminPay.account}', style: TextStyle(fontSize: 11)),
+          Text('UPI: ${AdminPay.upi}', style: TextStyle(fontSize: 11)),
+        ])),
+        SizedBox(height: 10),
+        Text('Product: ${p.name} Price: Rs.${p.price}'),
+        RadioListTile(value: 'UPI to Admin', groupValue: method, title: Text('UPI PhonePe GPay Admin ko', style: TextStyle(fontSize: 11)), onChanged: (v) => setSt(() => method = v.toString())),
+        RadioListTile(value: 'Bank to Admin', groupValue: method, title: Text('Bank Transfer Admin Account', style: TextStyle(fontSize: 11)), onChanged: (v) => setSt(() => method = v.toString())),
+        RadioListTile(value: 'COD to Admin', groupValue: method, title: Text('COD Admin collect', style: TextStyle(fontSize: 11)), onChanged: (v) => setSt(() => method = v.toString())),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Cancel')),
+        ElevatedButton(onPressed: () { Navigator.pop(ctx); doBuy(p, method); }, child: Text('Pay Rs.${p.price} to Admin'), style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF9F2089), foregroundColor: Colors.white))
+      ],
+    )));
+  }
+  void doBuy(Product p, String method) {
+    if (L_ID == null) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pehle Login You tab'))); return; }
+    if (!p.inStock || p.stock <= 0) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Out of Stock'), backgroundColor: Colors.red)); return; }
+    setState(() => p.stock--);
+    if (p.stock <= 0) p.inStock = false;
+    var u = USERS.firstWhere((e) => e.id == L_ID, orElse: () => UserModel('g', 'Guest', '', ''));
+    double price = double.tryParse(p.price)?? 0;
+    double comm = price * AdminPay.commission / 100;
+    double payout = price - comm;
+    ORDERS.add(Order(DateTime.now().millisecondsSinceEpoch.toString(), p.name, p.price, '${DateTime.now().day}-${DateTime.now().month}', L_ID!, L_NAME!, u.phone, p.sellerId, payMethod: method, comm: comm, payout: payout, isPaid: false, status: 'Paid to Admin'));
+    var seller = USERS.where((x) => x.id == p.sellerId).toList();
+    if (seller.isNotEmpty) seller[0].pending += payout;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Paid Rs.${p.price} to Admin Seller ko Rs.$payout Admin bhejega'), backgroundColor: Colors.green));
+  }
+  @override Widget build(BuildContext c) {
+    var list = PRODS.where((p) => p.isApproved && (cat == 'All' || p.cat == cat)).toList();
+    return Scaffold(
+      appBar: AppBar(backgroundColor: Colors.white, title: Text('Avira Pay to Admin', style: TextStyle(color: Color(0xFF9F2089), fontWeight: FontWeight.bold, fontSize: 14))),
+      body: Column(children: [
+        Container(color: Colors.red[100], padding: EdgeInsets.all(6), child: Text('Sab Paisa Admin ke paas ${AdminPay.phonePe} Admin change kar sakta hai', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold))),
+        SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: ['All', 'Saree', 'Kurti', 'Lehenga', 'Suits'].map((e) => Padding(padding: EdgeInsets.all(4), child: ChoiceChip(label: Text(e), selected: cat == e, onSelected: (v) => setState(() => cat = e)))).toList())),
+        Expanded(child: list.isEmpty? Center(child: Text('No Products')) : GridView.builder(padding: EdgeInsets.all(8), gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.65, crossAxisSpacing: 8, mainAxisSpacing: 8), itemCount: list.length, itemBuilder: (ctx, i) {
+          var p = list[i];
+          return Card(child: Column(children: [
+            Expanded(child: Container(color: Colors.grey[200], child: Center(child: Icon(Icons.image)))),
+            Padding(padding: EdgeInsets.all(6), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(p.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+              Text('By ${p.sellerName}', style: TextStyle(fontSize: 9, color: Color(0xFF9F2089))),
+              Text('Rs.${p.price} Stock ${p.stock}', style: TextStyle(fontSize: 11, color: p.inStock? Colors.green : Colors.red)),
+              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () => openPay(p), child: Text(p.inStock? 'Pay to Admin' : 'Out', style: TextStyle(fontSize: 8)), style: ElevatedButton.styleFrom(backgroundColor: p.inStock? Color(0xFF9F2089) : Colors.grey, foregroundColor: Colors.white)))
+            ]))
+          ]));
+        }))
+      ]),
+    );
+  }
+}
+
+class SearchScreen extends StatefulWidget { @override _SearchScreenState createState() => _SearchScreenState(); }
+class _SearchScreenState extends State<SearchScreen> {
+  String q = '';
+  @override Widget build(BuildContext c) {
+    var list = PRODS.where((p) => p.isApproved && p.name.toLowerCase().contains(q.toLowerCase())).toList();
+    return Scaffold(appBar: AppBar(title: Text('Search'), backgroundColor: Color(0xFF9F2089), foregroundColor: Colors.white), body: Column(children: [
+      Padding(padding: EdgeInsets.all(10), child: TextField(decoration: InputDecoration(hintText: 'Search', prefixIcon: Icon(Icons.search), border: OutlineInputBorder()), onChanged: (v) => setState(() => q = v))),
+      Expanded(child: ListView.builder(itemCount: list.length, itemBuilder: (ctx, i) { var p = list[i]; return Card(child: ListTile(title: Text('${p.name} Rs.${p.price}'), subtitle: Text('By ${p.sellerName} Stock ${p.stock}'))); }))
+    ]));
+  }
+}
+
+class CartScreen extends StatefulWidget { @override _CartScreenState createState() => _CartScreenState(); }
+class _CartScreenState extends State<CartScreen> {
+  @override Widget build(BuildContext c) {
+    return Scaffold(appBar: AppBar(title: Text('Cart'), backgroundColor: Color(0xFF9F2089), foregroundColor: Colors.white), body: Center(child: Text('Cart - Pay to Admin ${AdminPay.phonePe}')));
+  }
+}
+
+class YouScreen extends StatefulWidget { @override _YouScreenState createState() => _YouScreenState(); }
+class _YouScreenState extends State<YouScreen> {
+  void adminOTP() {
+    String num = ''; String otp = ''; String gen = '';
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx2, setSt) => AlertDialog(
+      title: Text('Admin OTP Login'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(decoration: InputDecoration(labelText: 'Admin Number 8955116739', border: OutlineInputBorder()), onChanged: (v) => num = v),
+        if (gen.isNotEmpty)...[ Container(color: Colors.green[50], padding: EdgeInsets.all(8), child: Text('OTP $gen')), TextField(decoration: InputDecoration(labelText: 'OTP', border: OutlineInputBorder()), onChanged: (v) => otp = v) ]
+      ]),
+      actions: [
+        if (gen.isEmpty) TextButton(onPressed: () { if (!AdminSecure.isAdmin(num)) return; String o = AdminSecure.genOTP(); setSt(() => gen = o); }, child: Text('Send OTP')),
+        if (gen.isNotEmpty) TextButton(onPressed: () { if (AdminSecure.verify(num, otp)) { Navigator.pop(ctx); L_ID = 'ADMIN'; L_NAME = 'Admin'; Navigator.push(context, MaterialPageRoute(builder: (_) => AdminPanel(adminNum: num))); } }, child: Text('Verify'))
+      ],
+    )));
+  }
+  void userLogin(bool seller) {
+    String name = ''; String phone = ''; String addr = ''; String acc = ''; String pe = '';
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: Text(seller? 'Seller Registration' : 'Customer Registration'),
+      content: SingleChildScrollView(child: Column(children: [
+        TextField(decoration: InputDecoration(labelText: 'Name*', border: OutlineInputBorder()), onChanged: (v) => name = v),
+        TextField(decoration: InputDecoration(labelText: 'Phone*', border: OutlineInputBorder()), onChanged: (v) => phone = v),
+        if (seller)...[ TextField(decoration: InputDecoration(labelText: 'Account Number* Admin yahan bhejega', border: OutlineInputBorder()), onChanged: (v) => acc = v), TextField(decoration: InputDecoration(labelText: 'PhonePe* Admin yahan bhejega', border: OutlineInputBorder()), onChanged: (v) => pe = v) ]
+      ])),
+      actions: [ TextButton(onPressed: () { if (name.isEmpty || phone.isEmpty) return; if (seller && (acc.isEmpty || pe.isEmpty)) return; String id = 'U_${DateTime.now().millisecondsSinceEpoch}'; USERS.add(UserModel(id, name, phone, addr, isSeller: seller, acc: acc, pe: pe)); L_ID = id; L_NAME = name; Navigator.pop(ctx); if (seller) Navigator.push(context, MaterialPageRoute(builder: (_) => SellerPanel(sId: id, sName: name))); setState(() {}); }, child: Text('Register')) ],
+    ));
+  }
+  @override Widget build(BuildContext c) {
+    return Scaffold(appBar: AppBar(title: Text('You Avira')), body: Column(children: [
+      Card(color: Colors.red[50], child: ListTile(leading: Icon(Icons.admin_panel_settings, color: Colors.red), title: Text('Admin Login OTP 8955116739'), subtitle: Text('Paisa Admin ke paas ${AdminPay.phonePe}'), onTap: adminOTP)),
+      ListTile(leading: Icon(Icons.person, color: Colors.blue), title: Text('Customer Login'), onTap: () => userLogin(false)),
+      ListTile(leading: Icon(Icons.store, color: Colors.green), title: Text('Seller Login Account PhonePe'), onTap: () => userLogin(true)),
+    ]));
+  }
+}
+
+class SellerPanel extends StatefulWidget { String sId; String sName; SellerPanel({required this.sId, required this.sName}); @override _SellerPanelState createState() => _SellerPanelState(); }
+class _SellerPanelState extends State<SellerPanel> {
+  String tab = 'Prod';
+  @override Widget build(BuildContext c) {
+    var myP = PRODS.where((p) => p.sellerId == widget.sId).toList();
+    var myO = ORDERS.where((o) => o.sellerId == widget.sId).toList();
+    var me = USERS.where((u) => u.id == widget.sId).toList();
+    double pending = me.isNotEmpty? me[0].pending : 0;
+    return Scaffold(appBar: AppBar(title: Text('Seller ${widget.sName}'), backgroundColor: Colors.green, foregroundColor: Colors.white), body: Column(children: [
+      Container(color: Colors.green[100], padding: EdgeInsets.all(8), child: Text(me.isNotEmpty? 'Account ${me[0].acc} PhonePe ${me[0].pe} Pending Rs.$pending' : '', style: TextStyle(fontSize: 11))),
+      Row(children: [ ChoiceChip(label: Text('Products ${myP.length}'), selected: tab == 'Prod', onSelected: (v) => setState(() => tab = 'Prod')), SizedBox(width: 5), ChoiceChip(label: Text('Orders ${myO.length}'), selected: tab == 'Ord', onSelected: (v) => setState(() => tab = 'Ord')) ]),
+      if (tab == 'Prod') Expanded(child: Column(children: [
+        ElevatedButton(onPressed: () { String n = ''; String pr = ''; String st = '10'; String acc = ''; String pe = ''; var user = USERS.firstWhere((e) => e.id == widget.sId, orElse: () => UserModel('', '', '', '')); acc = user.acc; pe = user.pe; showDialog(context: context, builder: (ctx) => AlertDialog(title: Text('Add Product'), content: Column(mainAxisSize: MainAxisSize.min, children: [ TextField(decoration: InputDecoration(labelText: 'Name', border: OutlineInputBorder()), onChanged: (v) => n = v), TextField(decoration: InputDecoration(labelText: 'Price', border: OutlineInputBorder()), onChanged: (v) => pr = v), TextField(decoration: InputDecoration(labelText: 'Account', border: OutlineInputBorder()), controller: TextEditingController(text: acc), onChanged: (v) => acc = v), TextField(decoration: InputDecoration(labelText: 'PhonePe', border: OutlineInputBorder()), controller: TextEditingController(text: pe), onChanged: (v) => pe = v) ]), actions: [ TextButton(onPressed: () { var u = USERS.firstWhere((e) => e.id == widget.sId); setState(() => PRODS.add(Product(DateTime.now().millisecondsSinceEpoch.toString(), n, pr, 'Saree', widget.sId, widget.sName, u.phone, stock: int.tryParse(st)?? 10, sellerAcc: acc.isEmpty? u.acc : acc, sellerPe: pe.isEmpty? u.pe : pe))); Navigator.pop(ctx); }, child: Text('Add')) ])); }, child: Text('Add Product')),
+        Expanded(child: ListView.builder(itemCount: myP.length, itemBuilder: (ctx, i) { var p = myP[i]; return Card(child: ListTile(title: Text('${p.name} Rs.${p.price}'), subtitle: Text('Acc ${p.sellerAcc} Pe ${p.sellerPe}'), trailing: IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: () => setState(() => PRODS.remove(p))))); }))
+      ])),
+      if (tab == 'Ord') Expanded(child: ListView.builder(itemCount: myO.length, itemBuilder: (ctx, i) { var o = myO[i]; return Card(child: ListTile(title: Text('${o.pName} Rs.${o.price}'), subtitle: Text('Pay ${o.payMethod} Comm Rs.${o.comm} You Rs.${o.payout}'))); }))
+    ]));
+  }
+}
+
+class AdminPanel extends StatefulWidget { String adminNum; AdminPanel({required this.adminNum}); @override _AdminPanelState createState() => _AdminPanelState(); }
+class _AdminPanelState extends State<AdminPanel> {
+  String tab = 'Orders';
+  @override Widget build(BuildContext c) {
+    double totalSale = ORDERS.fold(0, (s, o) => s + (double.tryParse(o.price)?? 0));
+    double totalComm = ORDERS.fold(0, (s, o) => s + o.comm);
+    double pendingPayout = ORDERS.where((o) =>!o.isPaid).fold(0, (s, o) => s + o.payout);
+    return Scaffold(appBar: AppBar(title: Text('ADMIN ${widget.adminNum}'), backgroundColor: Colors.red, foregroundColor: Colors.white), body: Column(children: [
+      Container(color: Colors.red[100], padding: EdgeInsets.all(8), child: Text('Paisa Admin ${AdminPay.phonePe} ${AdminPay.account} Sale Rs.$totalSale Comm Rs.$totalComm Pending Rs.$pendingPayout', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold))),
+      SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+        ChoiceChip(label: Text('Settings'), selected: tab == 'Settings', onSelected: (v) => setState(() => tab = 'Settings')),
+        ChoiceChip(label: Text('Orders ${ORDERS.length}'), selected: tab == 'Orders', onSelected: (v) => setState(() => tab = 'Orders')),
+        ChoiceChip(label: Text('Users ${USERS.length}'), selected: tab == 'Users', onSelected: (v) => setState(() => tab = 'Users')),
+        ChoiceChip(label: Text('Products ${PRODS.length}'), selected: tab == 'Products', onSelected: (v) => setState(() => tab = 'Products')),
+      ])),
+      if (tab == 'Settings') Expanded(child: ListView(children: [
+        Card(child: Padding(padding: EdgeInsets.all(12), child: Column(children: [
+          TextField(controller: TextEditingController(text: AdminPay.phonePe), decoration: InputDecoration(labelText: 'Admin PhonePe Customer yahan bhejega', border: OutlineInputBorder()), onChanged: (v) => AdminPay.phonePe = v),
+          SizedBox(height: 8),
+          TextField(controller: TextEditingController(text: AdminPay.account), decoration: InputDecoration(labelText: 'Admin Account Bank IFSC', border: OutlineInputBorder()), onChanged: (v) => AdminPay.account = v),
+          SizedBox(height: 8),
+          TextField(controller: TextEditingController(text: '${AdminPay.commission}'), decoration: InputDecoration(labelText: 'Commission %', border: OutlineInputBorder()), onChanged: (v) => AdminPay.commission = double.tryParse(v)?? 10),
+          ElevatedButton(onPressed: () { setState(() {}); }, child: Text('Save')),
+        ]))),
+        Card(child: ListTile(title: Text('Auto Pay to Sellers'), trailing: ElevatedButton(onPressed: () { for (var o in ORDERS.where((x) =>!x.isPaid)) { o.isPaid = true; var seller = USERS.where((u) => u.id == o.sellerId).toList(); if (seller.isNotEmpty) { seller[0].pending -= o.payout; if (seller[0].pending < 0) seller[0].pending = 0; seller[0].earned += o.payout; } } setState(() {}); }, child: Text('Auto Pay Rs.$pendingPayout')))),
+      ])),
+      if (tab == 'Orders') Expanded(child: ListView.builder(itemCount: ORDERS.length, itemBuilder: (ctx, i) { var o = ORDERS[i]; return Card(color: o.isPaid? Colors.green[50] : Colors.orange[50], child: ExpansionTile(title: Text('${o.pName} Rs.${o.price} ${o.isPaid? "Paid Seller" : "Pending Admin"}'), subtitle: Text('Cust ${o.custName} Comm Rs.${o.comm} Seller Rs.${o.payout}'), children: [ if (!o.isPaid) ElevatedButton(onPressed: () { setState(() { o.isPaid = true; var s = USERS.where((u) => u.id == o.sellerId).toList(); if (s.isNotEmpty) { s[0].pending -= o.payout; if (s[0].pending < 0) s[0].pending = 0; s[0].earned += o.payout; } }); }, child: Text('Pay Seller Rs.${o.payout} Manual'), style: ElevatedButton.styleFrom(backgroundColor: Colors.blue)) ])); })),
+      if (tab == 'Users') Expanded(child: ListView.builder(itemCount: USERS.length, itemBuilder: (ctx, i) { var u = USERS[i]; return Card(child: ListTile(title: Text('${u.name} ${u.isSeller? "SELLER" : "CUSTOMER"}'), subtitle: Text('Phone ${u.phone} Acc ${u.acc} Pe ${u.pe} Pending Rs.${u.pending}'), trailing: u.isSeller && u.pending > 0? ElevatedButton(onPressed: () { setState(() { for (var o in ORDERS.where((x) => x.sellerId == u.id &&!x.isPaid)) { o.isPaid = true; } u.earned += u.pending; u.pending = 0; }); }, child: Text('Pay Rs.${u.pending}')) : null)); })),
+      if (tab == 'Products') Expanded(child: ListView.builder(itemCount: PRODS.length, itemBuilder: (ctx, i) { var p = PRODS[i]; return Card(child: ListTile(title: Text('${p.name} Rs.${p.price} ${p.isApproved? "Approved" : "Pending"}'), subtitle: Text('Seller ${p.sellerName} Acc ${p.sellerAcc} Pe ${p.sellerPe}'), trailing: Row(mainAxisSize: MainAxisSize.min, children: [ if (!p.isApproved) IconButton(icon: Icon(Icons.check, color: Colors.green), onPressed: () => setState(() => p.isApproved = true)), IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: () => setState(() => PRODS.removeAt(i))) ]))); })),
+    ]));
+  }
+}
