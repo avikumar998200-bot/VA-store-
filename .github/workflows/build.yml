@@ -16,7 +16,7 @@ jobs:
           channel: 'stable'
       - name: Fix Android Build
         run: |
-          flutter create. --platforms=android
+          flutter create . --platforms=android
           sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/g' android/app/build.gradle.kts
           sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 34/g' android/app/build.gradle.kts
           flutter clean
