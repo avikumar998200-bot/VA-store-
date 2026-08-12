@@ -17,10 +17,12 @@ jobs:
       - name: Fix Android Build
         run: |
           flutter create . --platforms=android
-          echo "flutter.compileSdkVersion=34" >> android/local.properties
-          echo "flutter.targetSdkVersion=34" >> android/local.properties
-          echo "flutter.minSdkVersion=23" >> android/local.properties
-          sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle || true
+          # build.gradle.kts me 33 -> 34
+          sed -i 's/compileSdk = 33/compileSdk = 34/g' android/app/build.gradle.kts || true
+          sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle.kts || true
+          sed -i 's/minSdk = 16/minSdk = 23/g' android/app/build.gradle.kts || true
+          sed -i 's/targetSdk = 33/targetSdk = 34/g' android/app/build.gradle.kts || true
+          # purane gradle file ke liye bhi
           sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle || true
           flutter clean
       - run: flutter pub get
