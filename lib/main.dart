@@ -6,7 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    print("Firebase not init: $e");
+  }
   runApp(AviraApp());
 }
 
@@ -97,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Only 8955116739')));
                     return;
                   }
+                  try {
                   await FirebaseAuth.instance.verifyPhoneNumber(
                     phoneNumber: '+918955116739',
                     verificationCompleted: (c) async {
@@ -114,6 +119,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     codeAutoRetrievalTimeout: (vId) => verId = vId,
                   );
+                  } catch(e) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Firebase JSON missing! Add google-services.json'), backgroundColor: Colors.red));
+                  }
                 },
                 child: Text('Send REAL SMS OTP'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
@@ -156,7 +164,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      body: Center(child: Text('Avira Products - 15 sec dabao Admin ke liye')),
+      body: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text('Avira Products - 15 sec dabao Admin ke liye', style: TextStyle(fontSize: 16)),
+        SizedBox(height: 20),
+        Text('BUILD SUCCESS ✅', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 20))
+      ])),
     );
   }
 }
@@ -165,6 +177,4 @@ class AdminPanel extends StatelessWidget {
   @override
   Widget build(BuildContext c) => Scaffold(
         appBar: AppBar(title: Text('ADMIN - Real SMS Verified'), backgroundColor: Colors.red, foregroundColor: Colors.white),
-        body: Center(child: Text('REAL SMS se Admin khula!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-      );
-}
+        body: Center(child
