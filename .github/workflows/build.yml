@@ -16,14 +16,9 @@ jobs:
           channel: 'stable'
       - name: Fix Android Build
         run: |
-          flutter create . --platforms=android
-          # build.gradle.kts me 33 -> 34
-          sed -i 's/compileSdk = 33/compileSdk = 34/g' android/app/build.gradle.kts || true
-          sed -i 's/compileSdkVersion 33/compileSdkVersion 34/g' android/app/build.gradle.kts || true
-          sed -i 's/minSdk = 16/minSdk = 23/g' android/app/build.gradle.kts || true
-          sed -i 's/targetSdk = 33/targetSdk = 34/g' android/app/build.gradle.kts || true
-          # purane gradle file ke liye bhi
-          sed -i 's/compileSdk 33/compileSdk 34/g' android/app/build.gradle || true
+          flutter create. --platforms=android
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/g' android/app/build.gradle.kts
+          sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 34/g' android/app/build.gradle.kts
           flutter clean
       - run: flutter pub get
       - run: flutter build apk --release
