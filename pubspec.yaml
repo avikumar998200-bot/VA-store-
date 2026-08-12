@@ -1,5 +1,5 @@
-name: va_store
-description: VA Store - Shopping App
+name: avira
+description: Avira Store - Secure Shopping
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,7 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.2.2
+  device_info_plus: ^9.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
