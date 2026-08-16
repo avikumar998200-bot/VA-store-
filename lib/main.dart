@@ -6,73 +6,66 @@ import 'dart:async';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try { await Firebase.initializeApp(); } catch (e) {}
-  runApp(MaterialApp(debugShowCheckedModeBanner: false, home: MyHome()));
+  runApp(MaterialApp(debugShowCheckedModeBanner: false, home: AviraStore()));
 }
 
-class MyHome extends StatefulWidget {
+class AviraStore extends StatefulWidget {
   @override
-  State<MyHome> createState() => _MyHomeState();
+  State<AviraStore> createState() => _AviraStoreState();
 }
 
-class _MyHomeState extends State<MyHome> {
+class _AviraStoreState extends State<AviraStore> {
   Timer? timer;
-  int count = 0;
-  bool holding = false;
+  int sec = 0;
   String vid = "";
+  List<Map> prods = [
+    {"name":"T-Shirt","price":"499"},
+    {"name":"Shoes","price":"1299"},
+    {"name":"Watch","price":"999"},
+  ];
 
-  void startHold() {
-    holding = true;
-    count = 0;
-    timer = Timer.periodic(Duration(seconds: 1), (t) {
-      setState(() { count++; });
-      if (count >= 15) {
-        t.cancel();
-        setState(() { holding = false; count = 0; });
-        showOTP();
-      }
+  void startSecret() {
+    sec = 0;
+    timer = Timer.periodic(Duration(seconds: 1), (t){
+      sec++;
+      if(sec>=15){ t.cancel(); showAdminLogin(); }
     });
   }
+  void stopSecret(){ timer?.cancel(); sec=0; }
 
-  void stopHold() {
-    timer?.cancel();
-    setState(() { holding = false; count = 0; });
-  }
-
-  void showOTP() {
-    String num = "";
-    String otp = "";
-    bool sent = false;
-    showDialog(context: context, builder: (c) => StatefulBuilder(builder: (c2, set2) {
+  void showAdminLogin(){
+    String num=""; String otp=""; bool sent=false;
+    showDialog(context: context, builder: (c)=>StatefulBuilder(builder: (c2,set2){
       return AlertDialog(
         title: Text("Admin Login"),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(onChanged: (v) => num = v, decoration: InputDecoration(labelText: "Number")),
-          if (sent) TextField(onChanged: (v) => otp = v, decoration: InputDecoration(labelText: "OTP")),
+          TextField(decoration: InputDecoration(labelText:"Admin Number"), onChanged: (v)=>num=v),
+          if(sent) TextField(decoration: InputDecoration(labelText:"OTP"), onChanged: (v)=>otp=v),
         ]),
         actions: [
-          if (!sent) ElevatedButton(child: Text("Send OTP"), onPressed: () async {
-            if (num.trim() != "8955116739") return;
-            try {
+          if(!sent) ElevatedButton(child: Text("Send OTP"), onPressed: () async {
+            if(num.trim()!="8955116739"){ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Wrong number"))); return; }
+            try{
               await FirebaseAuth.instance.verifyPhoneNumber(
                 phoneNumber: "+918955116739",
                 verificationCompleted: (cred) async {
                   await FirebaseAuth.instance.signInWithCredential(cred);
                   Navigator.pop(c2);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => AdminPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_)=>AdminPanel()));
                 },
-                verificationFailed: (e) {},
-                codeSent: (v, r) { vid = v; set2(() => sent = true); },
-                codeAutoRetrievalTimeout: (v) { vid = v; },
+                verificationFailed: (e){ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("SMS Fail: ${e.message} - google-services.json check karo"))); },
+                codeSent: (v,r){ vid=v; set2(()=>sent=true); },
+                codeAutoRetrievalTimeout: (v){ vid=v; },
               );
-            } catch (e) {}
+            }catch(e){ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"))); }
           }),
-          if (sent) ElevatedButton(child: Text("Verify"), onPressed: () async {
-            try {
+          if(sent) ElevatedButton(child: Text("Verify"), onPressed: () async {
+            try{
               var cr = PhoneAuthProvider.credential(verificationId: vid, smsCode: otp.trim());
               await FirebaseAuth.instance.signInWithCredential(cr);
               Navigator.pop(c2);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => AdminPage()));
-            } catch (e) {}
+              Navigator.push(context, MaterialPageRoute(builder: (_)=>AdminPanel()));
+            }catch(e){ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Wrong OTP"))); }
           }),
         ],
       );
@@ -84,23 +77,24 @@ class _MyHomeState extends State<MyHome> {
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
-          onLongPressStart: (_) => startHold(),
-          onLongPressEnd: (_) => stopHold(),
-          onLongPressCancel: () => stopHold(),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("Avira Store", style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold)),
-            if (holding) Text("${15-count}s hold", style: TextStyle(fontSize: 12, color: Colors.red)),
-          ]),
+          onLongPressStart: (_)=>startSecret(),
+          onLongPressEnd: (_)=>stopSecret(),
+          onLongPressCancel: ()=>stopSecret(),
+          child: Text("Avira Store", style: TextStyle(color: Color(0xFF9F2089), fontWeight: FontWeight.bold)),
         ),
+        backgroundColor: Colors.white,
       ),
-      body: Center(child: Text("Avira Store - 15 sec hold for Admin")),
+      body: ListView.builder(
+        itemCount: prods.length,
+        itemBuilder: (c,i)=>Card(child: ListTile(title: Text(prods[i]["name"]), subtitle: Text("Rs.${prods[i]["price"]}"))),
+      ),
     );
   }
 }
 
-class AdminPage extends StatelessWidget {
+class AdminPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: Text("Admin")), body: Center(child: Text("Admin Panel Open")));
+    return Scaffold(appBar: AppBar(title: Text("Admin Panel")), body: Center(child: Text("Welcome Admin - 8955116739")) );
   }
 }
