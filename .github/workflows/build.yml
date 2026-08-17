@@ -15,17 +15,16 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: '3.22.3'
-      - name: Fix Android Build to 36 + Firebase dummy
+      - name: Fix Android Build to 36
         run: |
+          sed -i 's/^name:.*/name: avira/' pubspec.yaml
+          cat pubspec.yaml | head -5
           flutter create . --platforms=android
           mkdir -p android/app
-          if [ ! -f android/app/google-services.json ]; then
-            echo '{"project_info":{"project_number":"123456789","project_id":"dummy","storage_bucket":"dummy.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:123:android:abc","android_client_info":{"package_name":"com.example.avira"}},"oauth_client":[],"api_key":[{"current_key":"dummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > android/app/google-services.json
-          fi
+          echo '{"project_info":{"project_number":"123","project_id":"dummy","storage_bucket":"dummy.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:123:android:abc","android_client_info":{"package_name":"com.example.avira"}},"oauth_client":[],"api_key":[{"current_key":"dummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > android/app/google-services.json
           sed -i 's/compileSdk = .*/compileSdk = 36/' android/app/build.gradle.kts
           sed -i 's/targetSdk = .*/targetSdk = 36/' android/app/build.gradle.kts
           sed -i 's/minSdk = .*/minSdk = 23/' android/app/build.gradle.kts
-          echo "compileSdk 36 fixed" && cat android/app/build.gradle.kts | grep -E "compileSdk|targetSdk|minSdk"
           flutter clean
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
