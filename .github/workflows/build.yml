@@ -17,10 +17,14 @@ jobs:
       - name: Fix Android Build to 36
         run: |
           flutter create . --platforms=android
-          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle.kts || true
-          sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 36/g' android/app/build.gradle.kts || true
-          sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/g' android/app/build.gradle || true
-          sed -i 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 36/g' android/app/build.gradle || true
+          echo "flutter.compileSdkVersion=36" >> android/local.properties
+          echo "flutter.targetSdkVersion=36" >> android/local.properties
+          echo "flutter.minSdkVersion=21" >> android/local.properties
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/g' android/app/build.gradle.kts
+          sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 36/g' android/app/build.gradle.kts
+          sed -i 's/compileSdk =.*/compileSdk = 36/g' android/app/build.gradle.kts
+          sed -i 's/targetSdk =.*/targetSdk = 36/g' android/app/build.gradle.kts
+          cat android/app/build.gradle.kts
           flutter clean
       - run: flutter pub get
       - run: flutter build apk --release
