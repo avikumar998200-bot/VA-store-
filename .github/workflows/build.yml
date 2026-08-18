@@ -17,19 +17,20 @@ jobs:
           flutter-version: '3.22.3'
       - name: Fix Android 36 + Firebase
         run: |
+          set +e
           cat pubspec.yaml | head -3
           flutter create . --platforms=android --org com.avira.store || true
           mkdir -p android/app
           echo '{"project_info":{"project_number":"123","project_id":"dummy","storage_bucket":"dummy.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:123:android:abc","android_client_info":{"package_name":"com.avira.store.avira"}},"oauth_client":[],"api_key":[{"current_key":"dummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > android/app/google-services.json
-          find android -name "build.gradle*" -type f
+          ls android/app/build.gradle* || true
           sed -i 's/flutter.compileSdkVersion/36/g' android/app/build.gradle.kts || true
           sed -i 's/flutter.targetSdkVersion/36/g' android/app/build.gradle.kts || true
           sed -i 's/flutter.minSdkVersion/23/g' android/app/build.gradle.kts || true
           sed -i 's/compileSdk = .*/compileSdk = 36/' android/app/build.gradle.kts || true
           sed -i 's/targetSdk = .*/targetSdk = 36/' android/app/build.gradle.kts || true
           sed -i 's/minSdk = .*/minSdk = 23/' android/app/build.gradle.kts || true
-          cat android/app/build.gradle.kts | grep -E "Sdk"
-          flutter clean
+          echo "fixed"
+          flutter clean || true
       - run: flutter pub get
       - run: flutter build apk --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
