@@ -15,10 +15,8 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: '3.22.3'
-      - name: Fix All Errors
+      - name: Fix Android 36 + Firebase
         run: |
-          sed -i 's/^name:.*/name: avira/' pubspec.yaml
-          cat pubspec.yaml | head -3
           flutter create . --platforms=android
           mkdir -p android/app
           echo '{"project_info":{"project_number":"123","project_id":"dummy","storage_bucket":"dummy.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:123:android:abc","android_client_info":{"package_name":"com.example.avira"}},"oauth_client":[],"api_key":[{"current_key":"dummy"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > android/app/google-services.json
